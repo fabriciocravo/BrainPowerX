@@ -1,22 +1,41 @@
-function result = fit_power_curve(ns, powers)
-%FIT_POWER_CURVE  Fits P / (1 + (a/n)^b) to observed (ns, powers) data.
-%   Returns struct with fields P, a, b or empty if fit fails.
+function result = fit_power_curve(ns, proportions, varargin)
+    
+    % Guarantee dimentional consistency
+    ns = ns(:);
+    proportions  = proportions(:);
 
-    result = [];
+    p = inputParser;
+    default_func = @(params, x) params(3) ./ (1 + (params(1) ./ x).^params(2));
+    addParameter(p, 'fit_function', default_func, @(x) isa(x, 'function_handle'));
+    addParameter(p, 'lower_bounds', [1, 0.1, 0],         @isnumeric);
+    addParameter(p, 'upper_bounds', [100000, 5, 100],     @isnumeric);
+    parse(p, varargin{:});
+
+    power_func = p.Results.fit_function;
+    lb = p.Results.lower_bounds;
+    ub = p.Results.upper_bounds;
+
+    initial_params = [median(ns), 1, 50];
+    cost_func      = @(params) sum((proportions - power_func(params, ns)).^2);
+
+    options = optimoptions('fmincon', ...
+        'Display',                'off', ...
+        'MaxFunctionEvaluations', 10000, ...
+        'MaxIterations',          5000, ...
+        'OptimalityTolerance',    1e-8, ...
+        'StepTolerance',          1e-10, ...
+        'Algorithm',              'interior-point');
+
     try
-        ft   = fittype('P / (1 + (a/n)^b)', 'independent', 'n', ...
-                       'coefficients', {'P', 'a', 'b'});
-        opts = fitoptions(ft);
-        opts.Lower      = [0,    0,   0.1];
-        opts.Upper      = [100,  1e4, 20 ];
-        opts.StartPoint = [100,  median(ns), 2];
-        opts.MaxIter    = 1000;
+        fitted_params = fmincon(cost_func, initial_params, [], [], [], [], lb, ub, [], options);
+        result.P = fitted_params(3);
+        result.a = fitted_params(1);
+        result.b = fitted_params(2);
 
-        fitted        = fit(ns(:), powers(:), ft, opts);
-        result.P      = fitted.P;
-        result.a      = fitted.a;
-        result.b      = fitted.b;
     catch e
-        fprintf('    [WARN] Curve fit failed: %s\n', e.message);
+    
+       error('Curve fit failed: %s', e.message);
+
     end
+
 end
