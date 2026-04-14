@@ -1,7 +1,13 @@
+from dbm.sqlite3 import error
+
 import numpy as np
-from numba.core.types import double
-from numba.parfors.array_analysis import MAP_TYPES
+from seaborn import heatmap
 from shiny import App, ui, render, reactive
+from shiny.ui import input_selectize
+
+from data_utils.ui_generator import power_heatmap_card
+from data_utils.menu_options import OPTIONS
+from data_utils.css import _CSS
 from data_utils.utils import *
 from pathlib import Path
 import json
@@ -12,82 +18,99 @@ import json
 # e.g. hcp_fc_REST_EMOTION_t
 # ---------------------------------------------------------------------------
 
-METHODS = [
-    "Constrained_FDR",
-    "Constrained_FWER",
-    "Fast_TFCE",
-    "Parametric_FDR",
-    "Parametric_FWER",
-    "Size",
-]
 
 BASE_DIR = Path(__file__).parent
 
-DATASETS, MAP_TYPES, TASKS, SAMPLE_SIZES = (
-    compile_options(BASE_DIR / "data_utils" / "menu_options.json")
+DATASETS, MAP_TYPES, TASKS, SAMPLE_SIZES, METHODS = (
+    compile_options(OPTIONS)
 )
 
 INDEX = get_index(BASE_DIR / "results" / "data_base_index.json")
 
-# SAMPLE_SIZES = [20, 40, 80, 120, 200]
+ui_card_list = []
 
 # ---------------------------------------------------------------------------
 # UI
 # ---------------------------------------------------------------------------
-app_ui = ui.page_sidebar(
-    ui.sidebar(
-        ui.h5("Dataset"),
-        ui.input_selectize(
-            "dataset", None,
-            choices=DATASETS,
-            multiple=True,
-            options={"placeholder": "All datasets"},
-        ),
 
-        ui.hr(),
-        ui.h5("Map Type"),
-        ui.input_selectize(
-            "map_type", None,
-            choices=MAP_TYPES,
-            multiple=True,
-            options={"placeholder": "fc / activation"},
-        ),
+app_ui = ui.page_fluid(
+    ui.tags.head(ui.tags.style(_CSS)),
 
-        ui.hr(),
-        ui.h5("Study type"),
-        ui.input_selectize(
-            "task", None,
-            choices=TASKS,
-            multiple=True,
-            options={"placeholder": "All tasks"},
+    # ── Full-width header above everything ────────────────────────────────────
+    ui.div(
+        ui.div(
+            ui.tags.img(src="static/neuroprism_logo.png", class_="bpx-logo"),
+            ui.div(
+                ui.tags.h1("BrainPowerX"),
+                ui.tags.p("Statistical power calculator for neuroimaging studies"),
+                class_="bpx-title-block",
+            ),
+            class_="bpx-header-left",
         ),
-
-        ui.hr(),
-        ui.h5("Sample Size"),
-        ui.input_text(
-            "n_subjects", None,
-            placeholder="e.g. 20  or  20, 80, 120",
-            value="",
+        ui.div(
+            ui.tags.img(src="static/neuroprism_logo.png", style="height:42px; width:auto; opacity:0.7;"),
+            ui.tags.span("The NeuroPrism Lab"),
+            class_="bpx-lab-badge",
         ),
-
-        ui.hr(),
-        ui.h5("Methods"),
-        ui.input_selectize(
-            "methods", None,
-            choices=METHODS,
-            multiple=True,
-            options={"placeholder": "All methods"},
-        ),
-
-        width=260,
-        bg="#f8f8f8",
+        class_="bpx-header",
     ),
 
-    # ------------------------------------------------------------------
-    # Main panel — placeholder until next step
-    # ------------------------------------------------------------------
-    ui.output_ui("main_panel"),
+    ui.div(
+        # Sidebar panel
+        ui.div(
+            ui.h5("Dataset"),
+            ui.input_selectize(
+                "dataset", None,
+                choices=DATASETS,
+                multiple=True,
+                options={"placeholder": "All datasets"},
+            ),
+            ui.hr(),
+            ui.h5("Map Type"),
+            ui.input_selectize(
+                "map_type", None,
+                choices=MAP_TYPES,
+                multiple=True,
+                options={"placeholder": "fc / activation"},
+            ),
+            ui.hr(),
+            ui.h5("Study type"),
+            ui.input_selectize(
+                "task", None,
+                choices=TASKS,
+                multiple=True,
+                options={"placeholder": "All tasks"},
+            ),
+            ui.hr(),
+            ui.h5("Sample Size"),
+            ui.input_text(
+                "n_subjects", None,
+                placeholder="e.g. 20  or  20, 80, 120",
+                value="",
+            ),
+            ui.hr(),
+            ui.h5("Methods"),
+            ui.input_selectize(
+                "methods", None,
+                choices=METHODS,
+                multiple=True,
+                options={"placeholder": "All methods"},
+            ),
+            class_="sidebar-panel",
+        ),
+        # Main panel
+        ui.div(
+            ui.output_ui(
+                "main_panel",
+                fill=True,
+                fillable=True,
+            ),
+            class_="main-panel",
+        ),
+        class_="app-layout",
+    ),
 )
+
 
 # ---------------------------------------------------------------------------
 # Server
@@ -123,20 +146,12 @@ def server(input, output, session):
     @reactive.Calc
     def matched_folders():
 
-        data_set_results = []
-        for d in list(input.dataset()):
-            data_set_results = data_set_results + INDEX[d.lower()]
-        data_set_results = set(data_set_results)
+        def index_lookup(index, keys):
+            return set(f for k in keys for f in index.get(k.lower(), []))
 
-        map_results = []
-        for m in list(input.map_type()):
-            map_results = map_results + INDEX[m.lower()]
-        map_results = set(map_results)
-
-        task_results = []
-        for t in list(input.task()):
-            task_results =  task_results + INDEX[t.lower()]
-        task_results = set(task_results)
+        data_set_results = index_lookup(INDEX, input.dataset())
+        map_results = index_lookup(INDEX, input.map_type())
+        task_results = index_lookup(INDEX, input.task())
 
         results = data_set_results & map_results & task_results
         results = sorted(list(results))
@@ -153,22 +168,86 @@ def server(input, output, session):
         return sel if sel else None
 
     # ── Main panel: just echo selections for now ─────────────────────────
-    @output
     @render.ui
     def main_panel():
-        folders = matched_folders()
-        sizes   = selected_sizes()
-        methods = active_methods()
-
-        if not folders:
-            return ui.p("No experiments match the current filters.",
-                        style="color:gray; padding:1rem;")
-
         return ui.div(
-            ui.h4(f"{len(folders)} experiment(s) matched"),
-            ui.tags.ul(*[ui.tags.li(f) for f in folders]),
-            ui.p(f"Sample sizes: {sizes}"),
-            ui.p(f"Methods: {methods}"),
-        )
+                    *[power_heatmap_card(f, BASE_DIR) for f in matched_folders()],
+                    style="width: 100%;",
+               )
 
-app = App(app_ui, server)
+    def register_card_outputs(folder_name: str):
+
+        # Register the image output
+        @output(id=f"{folder_name}_curve_img")
+        @render.image
+        def _():
+            path_power_img = BASE_DIR / "results" / f"{folder_name}"
+            curve_type = input[f"{folder_name}_curve_type"]()
+
+            if curve_type == 'average':
+                path_power_img = path_power_img / 'average_power_curves.png'
+            elif curve_type == 'n20':
+                path_power_img = path_power_img / 'edges_above_threshold_20.png'
+            elif curve_type == 'n50':
+                path_power_img = path_power_img / 'edges_above_threshold_50.png'
+            elif curve_type == 'n80':
+                path_power_img = path_power_img / 'edges_above_threshold_80.png'
+            else:
+                raise TypeError('Power image type not correct recognized from options')
+
+            return  {"src": str(path_power_img), "alt": f"{folder_name}_curve_img"}
+
+        # Register the heatmap output
+        @output(id=f"{folder_name}_heatmap_img")
+        @render.image
+        def _():
+
+            heatmap_img_path = BASE_DIR / "results" / f"{folder_name}"
+
+            method = input[f"{folder_name}_method"]() or input.methods() or "Parametric_FWER"
+
+            # Handling subject number
+            n_subs = input[f"{folder_name}_subjects"]()
+
+            if n_subs:
+                n_subs = 'n' + n_subs
+
+            if not n_subs:
+                heatmap_json_path = heatmap_img_path / "metadata.json"
+
+                with open(heatmap_json_path) as f:
+                    meta_json = json.load(f)
+                    sub_list = meta_json["sample_sizes"]
+
+            if not n_subs and input.n_subjects():
+                n = int(input.n_subjects())
+
+                for i in range(1, len(sub_list)):
+                    if (sub_list[i - 1] - n) ** 2 < (sub_list[i] - n) ** 2:
+                        n_subs = 'n' + str(sub_list[i - 1])
+                        break
+                else:
+                    n_subs = 'n' + str(sub_list[-1])
+
+            if not n_subs and not input.n_subjects():
+                n_subs = 'n' + str(sub_list[-1])
+
+            heat_map_img_name = "heatmap_" + method + '_' + n_subs + '.png'
+
+            heatmap_img_path = heatmap_img_path / heat_map_img_name
+
+            return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
+
+    @reactive.effect
+    def _register_outputs():
+        for folder_name in matched_folders():
+            register_card_outputs(folder_name)
+
+
+
+app = App(app_ui, server, static_assets={"/static": BASE_DIR / "static"})
+
+if __name__ == '__main__':
+
+    pass
+
