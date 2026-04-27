@@ -1,4 +1,5 @@
 {
     "sample_sizes": [20, 40, 80, 120, 200],
-    "methods": ["Parametric_FWER", "Parametric_FDR", "Size", "Fast_TFCE", "Constrained_FWER", "Constrained_FDR"]
+    "methods": ["Parametric_FWER", "Parametric_FDR", "Size", "Fast_TFCE", "Constrained_FWER", "Constrained_FDR"],
+    "outcome": "REST_SOCIAL"
 }

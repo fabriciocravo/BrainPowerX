@@ -1,7 +1,6 @@
 import json
 
 
-
 def compile_options(options_dict):
 
     DATASETS = options_dict["datasets"]
@@ -9,8 +8,9 @@ def compile_options(options_dict):
     TASKS = options_dict["tasks"]
     SAMPLE_SIZES = options_dict["sample_sizes"]
     METHODS = options_dict["methods"]
+    CURVE_CHOICE = options_dict["curve_choices"]
 
-    return DATASETS, MAP_TYPES, TASKS,  SAMPLE_SIZES, METHODS
+    return DATASETS, MAP_TYPES, TASKS,  SAMPLE_SIZES, METHODS, CURVE_CHOICE
 
 
 def get_index(json_path):
@@ -39,29 +39,13 @@ def method_display_name(method: str) -> str:
 
 
 
-"""
-def _all_folders():
-    folders = set()
-    for v in INDEX.values():
-        folders.update(v)
-    return folders
-
-def _parse_folders():
-    datasets, map_types, tasks = set(), set(), set()
-    for folder in _all_folders():
-        name = folder.rstrip("/").split("/")[-1]   # strip path prefix
-        parts = name.split("_")
-        # For now:
-        # parts[0]          → dataset   (hcp)
-        # parts[1]          → map_type  (fc)
-        # parts[2:-1]       → task      (REST, EMOTION → REST_EMOTION)
-        # parts[-1]         → test_type (t)
-        datasets.add(parts[0])
-        map_types.add(parts[1])
-        tasks.add("_".join(parts[2:-1]))
-    return sorted(datasets), sorted(map_types), sorted(tasks)
-
-# DATASETS, MAP_TYPES, TASKS = _parse_folders()
-"""
+def outcome_display_name(experiment:str) -> str:
+    pass
 
 
+# This is here because shiny is not good
+def safe_input(input, key):
+    try:
+        return input[key]()
+    except Exception:
+        raise KeyError(f"Input '{key}' not found — does the UI element exist?")

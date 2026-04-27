@@ -21,7 +21,7 @@ import json
 
 BASE_DIR = Path(__file__).parent
 
-DATASETS, MAP_TYPES, TASKS, SAMPLE_SIZES, METHODS = (
+DATASETS, MAP_TYPES, TASKS, SAMPLE_SIZES, METHODS, CURVE_CHOICE = (
     compile_options(OPTIONS)
 )
 
@@ -62,6 +62,7 @@ app_ui = ui.page_fluid(
             ui.input_selectize(
                 "dataset", None,
                 choices=DATASETS,
+                selected=["HPC"],
                 multiple=True,
                 options={"placeholder": "All datasets"},
             ),
@@ -70,6 +71,7 @@ app_ui = ui.page_fluid(
             ui.input_selectize(
                 "map_type", None,
                 choices=MAP_TYPES,
+                selected=["FC"],
                 multiple=True,
                 options={"placeholder": "fc / activation"},
             ),
@@ -82,19 +84,28 @@ app_ui = ui.page_fluid(
                 options={"placeholder": "All tasks"},
             ),
             ui.hr(),
-            ui.h5("Sample Size"),
-            ui.input_text(
-                "n_subjects", None,
-                placeholder="e.g. 20  or  20, 80, 120",
-                value="",
-            ),
-            ui.hr(),
             ui.h5("Methods"),
             ui.input_selectize(
                 "methods", None,
                 choices=METHODS,
-                multiple=True,
+                multiple=False,
+                selected="Parametric_FWER",
                 options={"placeholder": "All methods"},
+            ),
+            ui.hr(),
+            ui.h5("Curve Choice"),
+            ui.input_selectize(
+                "curve_choice", None,
+                choices=CURVE_CHOICE,
+                multiple=False,
+                options={"placeholder": "Average"},
+            ),
+            ui.hr(),
+            ui.h5("Sample Size"),
+            ui.input_text(
+                "n_subjects", None,
+                placeholder="e.g. 20  or  20, 80, 120",
+                value="200",
             ),
             class_="sidebar-panel",
         ),
@@ -182,15 +193,15 @@ def server(input, output, session):
         @render.image
         def _():
             path_power_img = BASE_DIR / "results" / f"{folder_name}"
-            curve_type = input[f"{folder_name}_curve_type"]()
+            curve_choice = input.curve_choice()
 
-            if curve_type == 'average':
+            if 'average' in curve_choice.lower():
                 path_power_img = path_power_img / 'average_power_curves.png'
-            elif curve_type == 'n20':
+            elif '20' in curve_choice:
                 path_power_img = path_power_img / 'edges_above_threshold_20.png'
-            elif curve_type == 'n50':
+            elif '50' in curve_choice:
                 path_power_img = path_power_img / 'edges_above_threshold_50.png'
-            elif curve_type == 'n80':
+            elif '80' in curve_choice:
                 path_power_img = path_power_img / 'edges_above_threshold_80.png'
             else:
                 raise TypeError('Power image type not correct recognized from options')
@@ -204,22 +215,19 @@ def server(input, output, session):
 
             heatmap_img_path = BASE_DIR / "results" / f"{folder_name}"
 
-            method = input[f"{folder_name}_method"]() or input.methods() or "Parametric_FWER"
-
             # Handling subject number
-            n_subs = input[f"{folder_name}_subjects"]()
+            n_subs = input.n_subjects()
+            method = input.methods()
 
-            if n_subs:
-                n_subs = 'n' + n_subs
+            heatmap_json_path = heatmap_img_path / "metadata.json"
+
+            with open(heatmap_json_path) as f:
+                meta_json = json.load(f)
+                sub_list = meta_json["sample_sizes"]
 
             if not n_subs:
-                heatmap_json_path = heatmap_img_path / "metadata.json"
-
-                with open(heatmap_json_path) as f:
-                    meta_json = json.load(f)
-                    sub_list = meta_json["sample_sizes"]
-
-            if not n_subs and input.n_subjects():
+                n_subs = 'n' + str(sub_list[-1])
+            else:
                 n = int(input.n_subjects())
 
                 for i in range(1, len(sub_list)):
@@ -228,9 +236,6 @@ def server(input, output, session):
                         break
                 else:
                     n_subs = 'n' + str(sub_list[-1])
-
-            if not n_subs and not input.n_subjects():
-                n_subs = 'n' + str(sub_list[-1])
 
             heat_map_img_name = "heatmap_" + method + '_' + n_subs + '.png'
 
