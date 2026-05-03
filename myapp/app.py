@@ -4,11 +4,12 @@ import numpy as np
 from seaborn import heatmap
 from shiny import App, ui, render, reactive
 from shiny.ui import input_selectize
+from torch.onnx.symbolic_opset9 import contiguous
 
 from data_utils.ui_generator import power_heatmap_card
 from data_utils.menu_options import OPTIONS
 from data_utils.css import _CSS
-from data_utils.utils import *
+import data_utils.utils as utils
 from pathlib import Path
 import json
 
@@ -22,10 +23,10 @@ import json
 BASE_DIR = Path(__file__).parent
 
 DATASETS, MAP_TYPES, TASKS, SAMPLE_SIZES, METHODS, CURVE_CHOICE = (
-    compile_options(OPTIONS)
+    utils.compile_options(OPTIONS)
 )
 
-INDEX = get_index(BASE_DIR / "results" / "data_base_index.json")
+INDEX = utils.get_index(BASE_DIR / "results" / "data_base_index.json")
 
 ui_card_list = []
 
@@ -107,6 +108,13 @@ app_ui = ui.page_fluid(
                 placeholder="e.g. 20  or  20, 80, 120",
                 value="200",
             ),
+            ui.hr(),
+            ui.h5("Desired Power"),
+            ui.input_text(
+                "desired_power", None,
+                placeholder="e.g. 80",
+                value="80",
+            ),
             class_="sidebar-panel",
         ),
         # Main panel
@@ -157,18 +165,41 @@ def server(input, output, session):
     @reactive.Calc
     def matched_folders():
 
-        def index_lookup(index, keys):
-            return set(f for k in keys for f in index.get(k.lower(), []))
+        def input_lookup(multiple_selection_input):
 
-        data_set_results = index_lookup(INDEX, input.dataset())
-        map_results = index_lookup(INDEX, input.map_type())
-        task_results = index_lookup(INDEX, input.task())
+            return_set = set()
+            for key in multiple_selection_input:
+                return_set |= index_lookup(INDEX, key)
 
-        results = data_set_results & map_results & task_results
+            return return_set
+
+        def index_lookup(index, key):
+
+            result_from_query = set()
+            if key not in index:
+                pass
+            else:
+                result_from_query |= set(index[key])
+
+            return result_from_query
+
+        data_set_results = input_lookup(input.dataset())
+
+        map_results =  input_lookup(input.map_type())
+
+        # I should consider that tasks have multiple different names
+        # Selectors must match all
+
+        set_tasks = set()
+        for task in input.task():
+            t_list = utils.task_map_names(task)
+            set_tasks |= input_lookup(t_list)
+
+        results = data_set_results & map_results & set_tasks
         results = sorted(list(results))
 
         if not results:
-            results = INDEX["hcp"] # Return hcp plots as default
+            results = INDEX["HCP"] # Return hcp plots as default
 
         return results
 

@@ -49,3 +49,21 @@ def safe_input(input, key):
         return input[key]()
     except Exception:
         raise KeyError(f"Input '{key}' not found — does the UI element exist?")
+
+
+def task_map_names(task_menu_name:str) -> list:
+    task_menu_name = task_menu_name.strip()
+
+    if task_menu_name == 'EMOTION':
+        return ["REST_EMOTION"]
+    elif task_menu_name == 'GAMBLING':
+        print('Yeah')
+        return ["REST_GAMBLING"]
+    elif task_menu_name == "RELATIONAL":
+        return ["REST_RELATIONAL"]
+    elif task_menu_name == "SOCIAL":
+        return ["REST_SOCIAL"]
+    elif task_menu_name == "WORKING MEMORY":
+        return ["REST_WM"]
+    else:
+        return []

@@ -1,12 +1,12 @@
 {
-  "hcp": [
+  "HCP": [
     "hcp_fc_REST_EMOTION_t",
     "hcp_fc_REST_GAMBLING_t",
     "hcp_fc_REST_RELATIONAL_t",
     "hcp_fc_REST_SOCIAL_t",
     "hcp_fc_REST_WM_t"
   ],
-  "fc": [
+  "FC": [
     "hcp_fc_REST_EMOTION_t",
     "hcp_fc_REST_GAMBLING_t",
     "hcp_fc_REST_RELATIONAL_t",

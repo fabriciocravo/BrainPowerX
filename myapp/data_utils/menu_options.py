@@ -2,7 +2,7 @@
 OPTIONS = {
 
   "datasets": [
-    "HPC",
+    "HCP",
     "UKB",
     "ABCD"
   ],
@@ -13,8 +13,11 @@ OPTIONS = {
   ],
 
   "tasks": [
-    "A",
-    "B"
+    "EMOTION",
+    "GAMBLING",
+    "RELATIONAL",
+    "SOCIAL",
+    "WORKING MEMORY"
   ],
 
   "sample_sizes": [
