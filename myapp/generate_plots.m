@@ -35,8 +35,12 @@ fprintf('Started Generate Plot Scripts\n');
 % ─────────────────────────────────────────────
 %  CONFIG
 % ─────────────────────────────────────────────
-data_folder = data_folder = ["/Users/f.cravogomes/Desktop/Cloned Repos/PRISME-Brain-Power-Calculator/" ...
-    "power_calculator_results/previous_data_structure/power_calculation/hcp_fc"];
+
+% HPC - uncoment the desired one
+data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_fc"];
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 output_root = fullfile(fileparts(mfilename('fullpath')), 'data', 'hcp_fc_tasks');
 
 addpath(genpath(fileparts(mfilename('fullpath'))));
@@ -455,8 +459,15 @@ for key_idx = 1:length(grouping_keys)
             set(get(colorbar_handle, 'label'), 'string', 'Power (%)');
             set(get(colorbar_handle, 'label'), 'color', [0.89 0.91 0.94]);
 
+            dataset_title = strrep(upper(dataset), '_', ' ');
+            map_type_title = strrep(upper(map_type), '_', ' ');
+            taks_title = strrep(task, '_', ' ');
+            test_title = strrep(test, '_', ' ');
+            method_title = strrep(method, '_', ' ');
+
             title(ax, sprintf('%s | %s | %s | test=%s\n%s  |  n=%d', ...
-                upper(dataset), upper(map_type), task, test, method, current_n), ...
+                dataset_title, map_type_title, task_title, ...
+                test_title, method_t, current_n), ...
                 'Color', [0 0 0], 'FontSize', 14);
             xlabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
             ylabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);

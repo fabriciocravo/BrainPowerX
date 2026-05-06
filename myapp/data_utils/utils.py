@@ -1,6 +1,8 @@
 import json
 from math import ceil
-
+from .map_files.file_to_outcome import FILE_TO_OUTCOME
+from .map_files.method_to_display_name import METHOD_DISPLAY_NAMES
+from .map_files.outcome_to_file import OUTCOME_TO_FILE
 
 def compile_options(options_dict):
 
@@ -24,25 +26,9 @@ def get_index(json_path):
 
 
 def method_display_name(method: str) -> str:
-    if method == "Parametric_FWER":
-        return "Par. FWER"
-    elif method == "Parametric_FDR":
-        return "Par. FDR"
-    elif method == "Size":
-        return "Size"
-    elif method == "Fast_TFCE":
-        return "TFCE"
-    elif method == "Constrained_FWER":
-        return "cNBS FWER"
-    elif method == "Constrained_FDR":
-        return "cNBS FDR"
-    else:
-        return method
-
-
-
-def outcome_display_name(experiment:str) -> str:
-    pass
+    if method not in METHOD_DISPLAY_NAMES:
+        raise ValueError(f"Method not supported: {method}")
+    return METHOD_DISPLAY_NAMES[method]
 
 
 # This is here because shiny is not good
@@ -53,39 +39,26 @@ def safe_input(input, key):
         raise KeyError(f"Input '{key}' not found — does the UI element exist?")
 
 
-def outcome_map_names(outcome_menu_name:str) -> list:
-    outcome_menu_name = outcome_menu_name.strip()
-
-    if outcome_menu_name == 'EMOTION':
-        return ["REST_EMOTION"]
-    elif outcome_menu_name == 'GAMBLING':
-        print('Yeah')
-        return ["REST_GAMBLING"]
-    elif outcome_menu_name == "RELATIONAL":
-        return ["REST_RELATIONAL"]
-    elif outcome_menu_name == "SOCIAL":
-        return ["REST_SOCIAL"]
-    elif outcome_menu_name == "WORKING MEMORY":
-        return ["REST_WM"]
-    else:
-        return []
+def outcome_map_names(outcome_menu_name: str) -> list:
+    if outcome_menu_name not in OUTCOME_TO_FILE:
+        raise ValueError(f"Outcome not supported: {outcome_menu_name}")
+    return OUTCOME_TO_FILE[outcome_menu_name]
 
 
 def reverse_outcome_map(outcome_file_name: str) -> str:
-    outcome_file_name = outcome_file_name.strip()
+    if outcome_file_name not in FILE_TO_OUTCOME:
+        raise ValueError(f"Outcome not supported: {outcome_file_name}")
+    return FILE_TO_OUTCOME[outcome_file_name]
 
-    if outcome_file_name == 'REST_EMOTION':
-        return "EMOTION"
-    elif outcome_file_name == 'REST_GAMBLING':
-        return "GAMBLING"
-    elif outcome_file_name == "REST_RELATIONAL":
-        return "RELATIONAL"
-    elif outcome_file_name == "REST_SOCIAL":
-        return "SOCIAL"
-    elif outcome_file_name == "REST_WM":
-        return "WORKING MEMORY"
+
+def non_heatmap_methods(method: str) -> bool:
+
+    non_heatmap_method_names = {"Omnibus_Multidimensional_cNBS"}
+
+    if method in non_heatmap_method_names:
+        return True
     else:
-        raise TypeError(f"Outcome {outcome_file_name} is not mapped to an outcome name")
+        return False
 
 
 # This could be changed for an interpolation if more datapoints are added
@@ -127,3 +100,5 @@ def get_power_from_desired_subjects(n: float, P: float, a: float, b: float) -> i
 
     deno = 1 + (a/n)**b
     return P/deno
+
+

@@ -36,7 +36,8 @@ OPTIONS = {
     "Size",
     "Fast_TFCE",
     "Constrained_FWER",
-    "Constrained_FDR"
+    "Constrained_FDR",
+    "Omnibus_Multidimensional_cNBS"
   ],
 
   # Important - Please remind the app choice is based around having 20, 50, 80 in here
