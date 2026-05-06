@@ -22,7 +22,7 @@ import json
 
 BASE_DIR = Path(__file__).parent
 
-DATASETS, MAP_TYPES, TASKS, SAMPLE_SIZES, METHODS, CURVE_CHOICE = (
+DATASETS, MAP_TYPES, OUTCOMES, TEST_TYPES, SAMPLE_SIZES, METHODS, CURVE_CHOICE = (
     utils.compile_options(OPTIONS)
 )
 
@@ -77,12 +77,19 @@ app_ui = ui.page_fluid(
                 options={"placeholder": "fc / activation"},
             ),
             ui.hr(),
-            ui.h5("Study type"),
+            ui.h5("Outcomes"),
             ui.input_selectize(
-                "task", None,
-                choices=TASKS,
+                "outcomes", None,
+                choices=OUTCOMES,
                 multiple=True,
-                options={"placeholder": "All tasks"},
+                options={"placeholder": "All outcomes"},
+            ),
+            ui.h5("Test Types"),
+            ui.input_selectize(
+                "test_types", None,
+                choices=TEST_TYPES,
+                multiple=True,
+                options={"placeholder": "All tests"},
             ),
             ui.hr(),
             ui.h5("Methods"),
@@ -99,6 +106,7 @@ app_ui = ui.page_fluid(
                 "curve_choice", None,
                 choices=CURVE_CHOICE,
                 multiple=False,
+                selected="Average",
                 options={"placeholder": "Average"},
             ),
             ui.hr(),
@@ -191,9 +199,9 @@ def server(input, output, session):
         # Selectors must match all
 
         set_tasks = set()
-        for task in input.task():
-            t_list = utils.task_map_names(task)
-            set_tasks |= input_lookup(t_list)
+        for outcome in input.outcomes():
+            o_list = utils.outcome_map_names(outcome)
+            set_tasks |= input_lookup(o_list)
 
         results = data_set_results & map_results & set_tasks
         results = sorted(list(results))
@@ -218,7 +226,6 @@ def server(input, output, session):
                )
 
     def register_card_outputs(folder_name: str):
-
         # Register the image output
         @output(id=f"{folder_name}_curve_img")
         @render.image
@@ -273,6 +280,61 @@ def server(input, output, session):
             heatmap_img_path = heatmap_img_path / heat_map_img_name
 
             return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
+
+        @output(id=f"{folder_name}_calculation_text")
+        @render.text
+        def _():
+
+            metadata_path = BASE_DIR / "results" / f"{folder_name}" / "metadata.json"
+            with open(metadata_path) as f:
+                metadata = json.load(f)
+            outcome_name = utils.reverse_outcome_map(metadata["outcome"])
+
+            curve_choice = input.curve_choice()
+
+            if 'average' in curve_choice.lower():
+                type_of_curve = "power_curve_fits"
+            elif '20' in curve_choice:
+                type_of_curve = "p20"
+            elif '50' in curve_choice:
+                type_of_curve = "p50"
+            elif '80' in curve_choice:
+                type_of_curve = "p80"
+            else:
+                raise TypeError('Power image type not correct recognized from options')
+
+            method = input.methods()
+
+            P, a, b = utils.get_result_value_from_meta_data(
+                metadata,
+                type_of_curve,
+                method
+            )
+
+            n_subs = int(input.n_subjects())
+            power_desired = float(input.desired_power())
+
+            estimated_subs = utils.get_subject_number_from_desired_power(power_desired, P, a, b)
+            estimated_power = utils.get_power_from_desired_subjects(n_subs, P, a, b)
+
+            if type_of_curve == "power_curve_fits":
+                metric = "power"
+            else:
+                metric = "proportion"
+
+            fit_line = (f"Fit for {method} and {outcome_name}:"
+                        f"\n {metric.capitalize()}(n) = {P:.3f} / (1 + ({a:.3f} / n)^{b:.3f})")
+
+            subs_line = (
+                f"For a desired {metric} of {power_desired:.2f}:\n ~{estimated_subs} subjects required"
+                if estimated_subs > 0
+                else f"For a desired {metric} of {power_desired:.2f}:\n no solution (check parameters)"
+            )
+
+            power_line = f"For {n_subs} subjects:\n Estimated {metric} {estimated_power:.3f}"
+
+            return f"{fit_line}\n{subs_line}\n{power_line}"
+
 
     @reactive.effect
     def _register_outputs():

@@ -1,5 +1,5 @@
 function result = fit_power_curve(ns, proportions, varargin)
-    
+
     % Guarantee dimentional consistency
     ns = ns(:);
     proportions  = proportions(:);
@@ -18,24 +18,31 @@ function result = fit_power_curve(ns, proportions, varargin)
     initial_params = [median(ns), 1, 50];
     cost_func      = @(params) sum((proportions - power_func(params, ns)).^2);
 
-    options = optimoptions('fmincon', ...
-        'Display',                'off', ...
-        'MaxFunctionEvaluations', 10000, ...
-        'MaxIterations',          5000, ...
-        'OptimalityTolerance',    1e-8, ...
-        'StepTolerance',          1e-10, ...
-        'Algorithm',              'interior-point');
+     try
+        if exist('OCTAVE_VERSION', 'builtin')
+            % Octave version
+            fitted_params = sqp(initial_params, cost_func,
+              [], [], lb, ub ...
+            );
 
-    try
-        fitted_params = fmincon(cost_func, initial_params, [], [], [], [], lb, ub, [], options);
+        else
+            % MATLAB
+            options = optimoptions('fmincon', ...
+                'Display',                'off', ...
+                'MaxFunctionEvaluations', 10000, ...
+                'MaxIterations',          5000, ...
+                'OptimalityTolerance',    1e-8, ...
+                'StepTolerance',          1e-10, ...
+                'Algorithm',              'interior-point');
+            fitted_params = fmincon(cost_func, initial_params, [], [], [], [], lb, ub, [], options);
+        end
+
         result.P = fitted_params(3);
         result.a = fitted_params(1);
         result.b = fitted_params(2);
 
     catch e
-    
-       error('Curve fit failed: %s', e.message);
-
+        error('Curve fit failed: %s', e.message);
     end
 
 end

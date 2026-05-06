@@ -162,4 +162,9 @@ body {
 .shiny-html-output {
     width: 100% !important;
 }
+
+/* ── Text output size ───────────────────────────────────────── */
+.shiny-text-output {
+    font-size: 1.4rem;
+}
 """

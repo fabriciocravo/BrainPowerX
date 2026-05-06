@@ -22,14 +22,10 @@ def power_heatmap_card(name: str, BASE_DIR: Path) -> ui.layout_columns:
         ui.card(
             ui.card_header(f"Power Data - {outcome}"),
             ui.layout_columns(
-                ui.p(
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-                    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-                    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."
-                ),
+                ui.output_text_verbatim(f"{name}_calculation_text"),
                 ui.output_image(f"{name}_curve_img", inline=True),
                 ui.output_image(f"{name}_heatmap_img", inline=True),
-                col_widths=[2, 5, 5],
+                col_widths=[4, 4, 4],
             ),
         )
     )

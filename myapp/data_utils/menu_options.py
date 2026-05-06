@@ -12,12 +12,18 @@ OPTIONS = {
     "ACT"
   ],
 
-  "tasks": [
+  "outcomes": [
     "EMOTION",
     "GAMBLING",
     "RELATIONAL",
     "SOCIAL",
     "WORKING MEMORY"
+  ],
+
+  "test_types":[
+    "t",
+    "t2",
+    "r"
   ],
 
   "sample_sizes": [
