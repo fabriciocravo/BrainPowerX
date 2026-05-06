@@ -3,6 +3,7 @@ from math import ceil
 from .map_files.file_to_outcome import FILE_TO_OUTCOME
 from .map_files.method_to_display_name import METHOD_DISPLAY_NAMES
 from .map_files.outcome_to_file import OUTCOME_TO_FILE
+from .map_files.non_heatmap_method_names import NON_HEATMAP_METHODS
 
 def compile_options(options_dict):
 
@@ -53,9 +54,7 @@ def reverse_outcome_map(outcome_file_name: str) -> str:
 
 def non_heatmap_methods(method: str) -> bool:
 
-    non_heatmap_method_names = {"Omnibus_Multidimensional_cNBS"}
-
-    if method in non_heatmap_method_names:
+    if method in NON_HEATMAP_METHODS:
         return True
     else:
         return False

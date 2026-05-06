@@ -279,7 +279,10 @@ def server(input, output, session):
 
             heatmap_img_path = heatmap_img_path / heat_map_img_name
 
-            return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
+            if utils.non_heatmap_methods(method):
+                return None
+            else:
+                return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
 
         @output(id=f"{folder_name}_calculation_text")
         @render.text
