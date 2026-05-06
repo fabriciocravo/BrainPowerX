@@ -197,13 +197,27 @@ def server(input, output, session):
 
         # I should consider that tasks have multiple different names
         # Selectors must match all
+        # Both set and tasks must search for all related if none is selected
+        set_outcomes = set()
+        if input.outcomes():
+            for outcome in input.outcomes():
+                o_list = utils.outcome_map_names(outcome)
+                set_outcomes |= input_lookup(o_list)
+        else:
+            for outcome in OUTCOMES:
+                o_list = utils.outcome_map_names(outcome)
+                set_outcomes  |= input_lookup(o_list)
 
-        set_tasks = set()
-        for outcome in input.outcomes():
-            o_list = utils.outcome_map_names(outcome)
-            set_tasks |= input_lookup(o_list)
 
-        results = data_set_results & map_results & set_tasks
+        set_test_types = set()
+        if input.test_types():
+            for test_type in input.test_types():
+                set_test_types |= input_lookup(test_type)
+        else:
+            for test_type in TEST_TYPES:
+                set_test_types |= input_lookup(test_type)
+
+        results = data_set_results & map_results & set_outcomes  & set_test_types
         results = sorted(list(results))
 
         if not results:
@@ -308,6 +322,14 @@ def server(input, output, session):
 
             method = input.methods()
 
+            if type_of_curve == "power_curve_fits":
+                metric = "power"
+            else:
+                metric = "proportion"
+
+            if utils.non_heatmap_methods(method) and type_of_curve != "power_curve_fits":
+                return  f"For method {method},\n the {metric} does not apply"
+
             P, a, b = utils.get_result_value_from_meta_data(
                 metadata,
                 type_of_curve,
@@ -319,11 +341,6 @@ def server(input, output, session):
 
             estimated_subs = utils.get_subject_number_from_desired_power(power_desired, P, a, b)
             estimated_power = utils.get_power_from_desired_subjects(n_subs, P, a, b)
-
-            if type_of_curve == "power_curve_fits":
-                metric = "power"
-            else:
-                metric = "proportion"
 
             fit_line = (f"Fit for {method} and {outcome_name}:"
                         f"\n {metric.capitalize()}(n) = {P:.3f} / (1 + ({a:.3f} / n)^{b:.3f})")
@@ -343,7 +360,6 @@ def server(input, output, session):
     def _register_outputs():
         for folder_name in matched_folders():
             register_card_outputs(folder_name)
-
 
 
 app = App(app_ui, server, static_assets={"/static": BASE_DIR / "static"})
