@@ -191,9 +191,15 @@ def server(input, output, session):
 
             return result_from_query
 
-        data_set_results = input_lookup(input.dataset())
+        if input.dataset():
+            data_set_results = input_lookup(input.dataset())
+        else:
+            data_set_results = input_lookup(DATASETS)
 
-        map_results =  input_lookup(input.map_type())
+        if input.map_type():
+            map_results = input_lookup(input.map_type())
+        else:
+            map_results = input_lookup(MAP_TYPES)
 
         # I should consider that tasks have multiple different names
         # Selectors must match all
@@ -208,15 +214,12 @@ def server(input, output, session):
                 o_list = utils.outcome_map_names(outcome)
                 set_outcomes  |= input_lookup(o_list)
 
-        set_test_types = set()
         if input.test_types():
-            for test_type in input.test_types():
-                set_test_types |= input_lookup(test_type)
+            set_test_types = input_lookup(input.test_types())
         else:
-            for test_type in TEST_TYPES:
-                set_test_types |= input_lookup(test_type)
+            set_test_types = input_lookup(TEST_TYPES)
 
-        results = data_set_results & map_results & set_outcomes  & set_test_types
+        results = data_set_results & map_results & set_outcomes & set_test_types
         results = sorted(list(results))
 
         if not results:

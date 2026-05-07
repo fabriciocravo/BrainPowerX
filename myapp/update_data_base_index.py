@@ -2,7 +2,6 @@
    This script updates the database index.
    To construct the index structure used to retrieve the correct files queried by the user
 """
-
 from pathlib import Path
 import json
 
@@ -23,11 +22,15 @@ for d in Path("./results").iterdir():
 
     for key in {'dataset', 'map', 'outcome', 'test_type'}:
 
-        try:
-            data_base_index[metadata[key]] |= {directory_name}
-        except KeyError:
-            data_base_index[metadata[key]] = {directory_name}
+        if key == 'dataset' or key == 'map':
+            index_key = metadata[key].upper()
+        else:
+            index_key = metadata[key]
 
+        try:
+            data_base_index[index_key] |= {directory_name}
+        except KeyError:
+            data_base_index[index_key] = {directory_name}
 
 for key in data_base_index:
     data_base_index[key] = list(data_base_index[key])
