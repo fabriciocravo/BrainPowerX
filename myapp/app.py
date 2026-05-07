@@ -208,7 +208,6 @@ def server(input, output, session):
                 o_list = utils.outcome_map_names(outcome)
                 set_outcomes  |= input_lookup(o_list)
 
-
         set_test_types = set()
         if input.test_types():
             for test_type in input.test_types():

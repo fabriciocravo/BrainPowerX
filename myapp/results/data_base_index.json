@@ -1,0 +1,38 @@
+{
+    "hcp": [
+        "hcp_fc_REST_SOCIAL_t",
+        "hcp_fc_REST_WM_t",
+        "hcp_fc_REST_EMOTION_t",
+        "hcp_fc_REST_RELATIONAL_t",
+        "hcp_fc_REST_GAMBLING_t"
+    ],
+    "REST_EMOTION": [
+        "hcp_fc_REST_EMOTION_t"
+    ],
+    "t": [
+        "hcp_fc_REST_SOCIAL_t",
+        "hcp_fc_REST_WM_t",
+        "hcp_fc_REST_EMOTION_t",
+        "hcp_fc_REST_RELATIONAL_t",
+        "hcp_fc_REST_GAMBLING_t"
+    ],
+    "fc": [
+        "hcp_fc_REST_SOCIAL_t",
+        "hcp_fc_REST_WM_t",
+        "hcp_fc_REST_EMOTION_t",
+        "hcp_fc_REST_RELATIONAL_t",
+        "hcp_fc_REST_GAMBLING_t"
+    ],
+    "REST_RELATIONAL": [
+        "hcp_fc_REST_RELATIONAL_t"
+    ],
+    "REST_WM": [
+        "hcp_fc_REST_WM_t"
+    ],
+    "REST_GAMBLING": [
+        "hcp_fc_REST_GAMBLING_t"
+    ],
+    "REST_SOCIAL": [
+        "hcp_fc_REST_SOCIAL_t"
+    ]
+}

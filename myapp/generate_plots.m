@@ -95,8 +95,12 @@ for file_idx = 1:length(power_mat_files)
         edge_groups = meta_data.rep_parameters.edge_groups;
     end
 
+    % There will likely need to be a function here to handle edge cases
+    % For example, datasets that were named differently, etc
+
     grouping_key = make_valid_name( ...
-      sprintf('%s_%s_%s_%s', dataset, map_type, task, test));
+      sprintf('%s_%s_%s_%s', dataset, map_type, task, test) ...
+      );
 
     if ~isfield(result_data_subs_grouped, grouping_key) || ...
         ~isfield(result_data_subs_grouped.(grouping_key), 'mask')
@@ -127,13 +131,6 @@ end
 %%% Search terms contain the names of their respective folders
 grouping_keys = fieldnames(result_data_subs_grouped);
 fprintf('\nGrouped into %d combinations.\n\n', length(grouping_keys));
-
-json_dir = fullfile('results', 'data_base_index.json');
-if isfile(json_dir)
-    json_index = json_to_struct(json_dir);
-else
-    json_index = struct();
-end
 
 for key_idx = 1:length(grouping_keys)
     grouping_key  = grouping_keys{key_idx};
@@ -461,13 +458,13 @@ for key_idx = 1:length(grouping_keys)
 
             dataset_title = strrep(upper(dataset), '_', ' ');
             map_type_title = strrep(upper(map_type), '_', ' ');
-            taks_title = strrep(task, '_', ' ');
+            task_title = strrep(task, '_', ' ');
             test_title = strrep(test, '_', ' ');
             method_title = strrep(method, '_', ' ');
 
             title(ax, sprintf('%s | %s | %s | test=%s\n%s  |  n=%d', ...
                 dataset_title, map_type_title, task_title, ...
-                test_title, method_t, current_n), ...
+                test_title, method_title, current_n), ...
                 'Color', [0 0 0], 'FontSize', 14);
             xlabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
             ylabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
@@ -494,23 +491,13 @@ for key_idx = 1:length(grouping_keys)
     fclose(fid);
     fprintf('  [OK] Power data JSON saved.\n');
 
-    fields = {dataset, map_type, task, test};
-    for i = 1:length(fields)
-        key = make_valid_name(fields{i});
-        if ~isfield(json_index, key)
-            json_index.(key) = {};
-        end
-        json_index.(key){end+1} = output_group_dir;
-    end
-
-    fid = fopen(json_dir, 'w');
-    fprintf(fid, '%s', jsonencode(json_index));
-    fclose(fid);
-
     metadata_json = struct();
     metadata_json.sample_sizes = sample_sizes;
     metadata_json.method_list = ALL_METHODS;
+    metadata_json.dataset = dataset;
+    metadata_json.map = map_type;
     metadata_json.outcome = task;
+    metadata_json.test_type = test;
     metadata_json.power_curve_fits = curve_fits;
 
     for method_idx = 1:length(qualifying_methods)
