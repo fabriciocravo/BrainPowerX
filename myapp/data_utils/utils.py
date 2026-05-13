@@ -101,3 +101,24 @@ def get_power_from_desired_subjects(n: float, P: float, a: float, b: float) -> i
     return P/deno
 
 
+def find_estimation_of_desired_value(
+        user_value: float, 
+        analysis_type: str, 
+        P: float,
+        a: float,
+        b: float,
+    ) -> float:
+
+    if analysis_type == 'n_subjects':
+        estimation = get_subject_number_from_desired_power(user_value, P, a, b)
+    elif analysis_type == 'desired_power':
+        estimation = get_power_from_desired_subjects(user_value, P, a, b)
+    else:
+        raise ValueError('Analysis type not supported')
+    
+    return estimation
+
+
+def find_closest_n_sub_to_estimation():
+    pass
+

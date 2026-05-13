@@ -1,10 +1,5 @@
-from dbm.sqlite3 import error
-
 import numpy as np
-from seaborn import heatmap
 from shiny import App, ui, render, reactive
-from shiny.ui import input_selectize
-from torch.onnx.symbolic_opset9 import contiguous
 
 from data_utils.ui_generator import power_heatmap_card
 from data_utils.menu_options import OPTIONS
@@ -27,8 +22,6 @@ DATASETS, MAP_TYPES, OUTCOMES, TEST_TYPES, SAMPLE_SIZES, METHODS, CURVE_CHOICE =
 )
 
 INDEX = utils.get_index(BASE_DIR / "results" / "data_base_index.json")
-
-ui_card_list = []
 
 # ---------------------------------------------------------------------------
 # UI
@@ -110,16 +103,19 @@ app_ui = ui.page_fluid(
                 options={"placeholder": "Average"},
             ),
             ui.hr(),
-            ui.h5("Sample Size"),
-            ui.input_text(
-                "n_subjects", None,
-                placeholder="e.g. 20  or  20, 80, 120",
-                value="200",
+            ui.h5("Power Analysis"),
+            ui.input_select(
+                "analysis_mode", None,
+                choices={
+                    "n_subjects": "Give sample size → estimate power",
+                    "desired_power": "Give desired power → estimate N",
+                },
+                selected="n_subjects",
             ),
             ui.hr(),
-            ui.h5("Desired Power"),
+            ui.h5("Analysis"),
             ui.input_text(
-                "desired_power", None,
+                "analysis_value", None,
                 placeholder="e.g. 80",
                 value="80",
             ),
@@ -143,31 +139,6 @@ app_ui = ui.page_fluid(
 # Server
 # ---------------------------------------------------------------------------
 def server(input, output, session):
-
-    # ── Parse the free-text sample-size field ───────────────────────────
-    @reactive.Calc
-    def selected_sizes():
-        raw = input.n_subjects().strip()
-        if not raw:
-            return None                         # empty → all sizes
-
-        try:
-            first_size = int(raw.replace(",", " ").split()[0])
-        except:
-            raise ValueError("Sample size could not be converted to number")
-
-        previous_error = np.inf
-        for (i, n_sub) in enumerate(SAMPLE_SIZES):
-
-            error = (n_sub - first_size)**2
-            if error > previous_error:
-                return SAMPLE_SIZES[i - 1] # Array is sorted, if error got worse, return previous
-            else:
-                previous_error = error
-
-        # Return last, best possible error
-        return SAMPLE_SIZES[-1]
-
 
     # ── Intersect index to find matching result folders ─────────────────
     @reactive.Calc
@@ -227,12 +198,6 @@ def server(input, output, session):
 
         return results
 
-    # ── Active methods (empty selection → all) ───────────────────────────
-    @reactive.Calc
-    def active_methods():
-        sel = list(input.methods())
-        return sel if sel else None
-
     # ── Main panel: just echo selections for now ─────────────────────────
     @render.ui
     def main_panel():
@@ -242,75 +207,15 @@ def server(input, output, session):
                )
 
     def register_card_outputs(folder_name: str):
-        # Register the image output
-        @output(id=f"{folder_name}_curve_img")
-        @render.image
-        def _():
-            path_power_img = BASE_DIR / "results" / f"{folder_name}"
-            curve_choice = input.curve_choice()
 
-            if 'average' in curve_choice.lower():
-                path_power_img = path_power_img / 'average_power_curves.png'
-            elif '20' in curve_choice:
-                path_power_img = path_power_img / 'edges_above_threshold_20.png'
-            elif '50' in curve_choice:
-                path_power_img = path_power_img / 'edges_above_threshold_50.png'
-            elif '80' in curve_choice:
-                path_power_img = path_power_img / 'edges_above_threshold_80.png'
-            else:
-                raise TypeError('Power image type not correct recognized from options')
-
-            return  {"src": str(path_power_img), "alt": f"{folder_name}_curve_img"}
-
-        # Register the heatmap output
-        @output(id=f"{folder_name}_heatmap_img")
-        @render.image
-        def _():
-
-            heatmap_img_path = BASE_DIR / "results" / f"{folder_name}"
-
-            # Handling subject number
-            n_subs = input.n_subjects()
-            method = input.methods()
-
-            heatmap_json_path = heatmap_img_path / "metadata.json"
-
-            with open(heatmap_json_path) as f:
-                meta_json = json.load(f)
-                sub_list = meta_json["sample_sizes"]
-
-            if not n_subs:
-                n_subs = 'n' + str(sub_list[-1])
-            else:
-                n = int(input.n_subjects())
-
-                for i in range(1, len(sub_list)):
-                    if (sub_list[i - 1] - n) ** 2 < (sub_list[i] - n) ** 2:
-                        n_subs = 'n' + str(sub_list[i - 1])
-                        break
-                else:
-                    n_subs = 'n' + str(sub_list[-1])
-
-            heat_map_img_name = "heatmap_" + method + '_' + n_subs + '.png'
-
-            heatmap_img_path = heatmap_img_path / heat_map_img_name
-
-            if utils.non_heatmap_methods(method):
-                return None
-            else:
-                return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
-
-        @output(id=f"{folder_name}_calculation_text")
-        @render.text
-        def _():
-
+         # Calculate acording to user based input
+        @reactive.Calc
+        def card_analysis():
             metadata_path = BASE_DIR / "results" / f"{folder_name}" / "metadata.json"
             with open(metadata_path) as f:
                 metadata = json.load(f)
-            outcome_name = utils.reverse_outcome_map(metadata["outcome"])
 
             curve_choice = input.curve_choice()
-
             if 'average' in curve_choice.lower():
                 type_of_curve = "power_curve_fits"
             elif '20' in curve_choice:
@@ -320,42 +225,109 @@ def server(input, output, session):
             elif '80' in curve_choice:
                 type_of_curve = "p80"
             else:
-                raise TypeError('Power image type not correct recognized from options')
+                raise TypeError('Power image type not correctly recognized from options')
 
             method = input.methods()
+            analysis_mode = input.analysis_mode()
+            analysis_value = float(input.analysis_value())
 
-            if type_of_curve == "power_curve_fits":
-                metric = "power"
+            P, a, b = utils.get_result_value_from_meta_data(metadata, type_of_curve, method)
+            
+            estimation = utils.find_estimation_of_desired_value(
+                analysis_value, analysis_mode, P, a, b
+            )
+
+            return {
+                "metadata": metadata,
+                "type_of_curve": type_of_curve,
+                "method": method,
+                "P": P,
+                "a": a, 
+                "b": b,
+                "estimation": estimation,
+                "analysis_mode": analysis_mode,
+                "analysis_value": analysis_value,
+            }
+        
+        # Register the image output
+        @output(id=f"{folder_name}_curve_img")
+        @render.image
+        def _():
+            path_power_img = BASE_DIR / "results" / f"{folder_name}"
+            c_data = card_analysis()
+            type_of_curve = c_data["type_of_curve"]
+
+            if type_of_curve == 'power_curve_fits':
+                path_power_img = path_power_img / 'average_power_curves.png'
+            elif type_of_curve == 'p20':
+                path_power_img = path_power_img / 'edges_above_threshold_20.png'
+            elif type_of_curve == 'p50':
+                path_power_img = path_power_img / 'edges_above_threshold_50.png'
+            elif type_of_curve == 'p80':
+                path_power_img = path_power_img / 'edges_above_threshold_80.png'
             else:
-                metric = "proportion"
+                raise TypeError('Power image type not correct recognized from options')
+
+            return  {"src": str(path_power_img), "alt": f"{folder_name}_curve_img"}
+
+        @output(id=f"{folder_name}_heatmap_img")
+        @render.image
+        def _():
+            # Extract necessary data for heatmap
+            c_data = card_analysis()
+            method = c_data['method']
+            sub_list = c_data['metadata']['sample_sizes']
+            analysis_mode = c_data['analysis_mode']
+
+            if utils.non_heatmap_methods(method):
+                return None
+
+            if analysis_mode == 'n_subjects':
+                desired_subs = c_data['analysis_value']
+            elif analysis_mode == 'desired_power':
+                desired_subs = c_data['estimation']
+            else:
+                raise ValueError('Analysis mode not supported')
+
+            closest = min(sub_list, key=lambda n: (n - desired_subs) ** 2)
+            n_subs = 'n' + str(closest)
+
+            heatmap_img_path = BASE_DIR / "results" / folder_name / f"heatmap_{method}_{n_subs}.png"
+            return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
+
+        @output(id=f"{folder_name}_calculation_text")
+        @render.text
+        def _():
+            # Get necessary data from card
+            c_data = card_analysis()
+            type_of_curve = c_data['type_of_curve']
+            method = c_data['method']
+            sub_list = c_data['metadata']['sample_sizes']
+            metric = "power" if type_of_curve == "power_curve_fits" else "proportion"
+            P, a, b = c_data['P'], c_data['a'], c_data['b']
+            estimation = c_data['estimation']
+            analysis_value = c_data['analysis_value']
+            analysis_mode = c_data['analysis_mode']
 
             if utils.non_heatmap_methods(method) and type_of_curve != "power_curve_fits":
-                return  f"For method {method},\n the {metric} does not apply"
+                return f"For method {method},\n the {metric} does not apply"
 
-            P, a, b = utils.get_result_value_from_meta_data(
-                metadata,
-                type_of_curve,
-                method
-            )
-
-            n_subs = int(input.n_subjects())
-            power_desired = float(input.desired_power())
-
-            estimated_subs = utils.get_subject_number_from_desired_power(power_desired, P, a, b)
-            estimated_power = utils.get_power_from_desired_subjects(n_subs, P, a, b)
-
-            fit_line = (f"Fit for {method} and {outcome_name}:"
+            fit_line = (f"Fit for {method}:"
                         f"\n {metric.capitalize()}(n) = {P:.3f} / (1 + ({a:.3f} / n)^{b:.3f})")
 
-            subs_line = (
-                f"For a desired {metric} of {power_desired:.2f}:\n ~{estimated_subs} subjects required"
-                if estimated_subs > 0
-                else f"For a desired {metric} of {power_desired:.2f}:\n no solution (check parameters)"
-            )
+            if analysis_mode == "n_subjects":
+                warning = f"\n Below minimum estimated N ({sub_list[0]})" if analysis_value < sub_list[0] else ""
+                result_line = f"For {int(analysis_value)} subjects:\n Estimated {metric} = {estimation:.3f}{warning}"
+            else:
+                if estimation <= 0:
+                    result_line = f"For desired {metric} of {analysis_value:.2f}:\n no solution (check parameters)"
+                else:
+                    warning = f"\n Below minimum estimated N ({sub_list[0]})" \
+                    if estimation < sub_list[0] else ""
+                    result_line = f"For desired {metric} of {analysis_value:.2f}:\n \
+                    ~{int(estimation)} subjects required{warning}"
 
-            power_line = f"For {n_subs} subjects:\n Estimated {metric} {estimated_power:.3f}"
-
-            return f"{fit_line}\n{subs_line}\n{power_line}"
+            return f"{fit_line}\n{result_line}"
 
 
     @reactive.effect
