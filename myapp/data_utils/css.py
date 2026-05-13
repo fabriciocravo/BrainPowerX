@@ -39,14 +39,14 @@ body {
 }
 
 .bpx-logo {
-    height: 70px;
+    height: 100px;
     width: auto;
     opacity: 0.85;
 }
 
 .bpx-title-block h1 {
     margin: 0;
-    font-size: 1.65rem;
+    font-size: 2.2rem;
     font-weight: 700;
     color: #2D1F5E;
 }
@@ -93,7 +93,7 @@ body {
 /* ── App layout (sidebar + main) ─────────────────────────────── */
 .app-layout {
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 500px 1fr;
     flex: 1 1 auto;
     min-height: calc(100vh - 120px);
 }
@@ -109,7 +109,7 @@ body {
 .sidebar-panel h5 {
     color: #5C4A2A;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 2rem;
     text-transform: uppercase;
     letter-spacing: 0.07em;
     margin-bottom: 4px;
@@ -122,12 +122,20 @@ body {
 
 .sidebar-panel .selectize-input,
 .sidebar-panel input[type="text"] {
-    font-size: 0.95rem;
+    font-size: 2rem;
     padding: 8px 10px !important;
 }
 
 .sidebar-panel .selectize-dropdown {
-    font-size: 0.95rem;
+    font-size: 2rem;
+}
+
+.sidebar-panel select {
+    font-size: 2rem !important;
+}
+
+.sidebar-panel .shiny-input-container {
+    width: 100% !important;
 }
 
 /* ── Main panel ──────────────────────────────────────────────── */
@@ -139,7 +147,7 @@ body {
 
 /* ── Card headers (Power curves / Heatmaps) ──────────────────── */
 .card-header {
-    font-size: 1.3rem;
+    font-size: 2rem !important; 
     font-weight: 600;
 }
 
@@ -153,7 +161,7 @@ body {
 .shiny-image-output img {
     width: 100%;
     height: auto;
-    max-height: 320px;
+    max-height: 600px;
     object-fit: contain;
     display: block;
 }
@@ -165,6 +173,10 @@ body {
 
 /* ── Text output size ───────────────────────────────────────── */
 .shiny-text-output {
-    font-size: 1.4rem;
+    font-size: 1.4rem; !important;
+}
+
+pre {
+    font-size: 2rem !important;
 }
 """

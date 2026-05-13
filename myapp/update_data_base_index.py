@@ -7,9 +7,11 @@ import json
 
 data_base_index = {}
 
+BASE_DIR = Path(__file__).parent
+results_dir = BASE_DIR / "results"
 
 # Loop over everything
-for d in Path("./results").iterdir():
+for d in Path(results_dir).iterdir():
 
     if not d.is_dir():
         continue
@@ -35,5 +37,5 @@ for d in Path("./results").iterdir():
 for key in data_base_index:
     data_base_index[key] = list(data_base_index[key])
 
-with open(Path("./results") / "data_base_index.json", "w") as f:
+with open(Path(results_dir) / "data_base_index.json", "w") as f:
     json.dump(data_base_index, f, indent=4)

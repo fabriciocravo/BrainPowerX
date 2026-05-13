@@ -1,3 +1,5 @@
+from .map_files.outcome_to_file import OUTCOME_TO_FILE
+
 
 OPTIONS = {
 
@@ -12,13 +14,7 @@ OPTIONS = {
     "ACT"
   ],
 
-  "outcomes": [
-    "EMOTION",
-    "GAMBLING",
-    "RELATIONAL",
-    "SOCIAL",
-    "WORKING MEMORY"
-  ],
+  "outcomes": list(OUTCOME_TO_FILE.keys()),
 
   "test_types":[
     "t",

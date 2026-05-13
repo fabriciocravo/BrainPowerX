@@ -4,7 +4,7 @@ from shiny import App, ui, render, reactive
 from pathlib import Path
 import json
 import re
-from .utils import method_display_name
+from .utils import method_display_name, reverse_outcome_map
 
 def power_heatmap_card(name: str, BASE_DIR: Path) -> ui.layout_columns:
     """
@@ -20,7 +20,7 @@ def power_heatmap_card(name: str, BASE_DIR: Path) -> ui.layout_columns:
 
     return ui.div(
         ui.card(
-            ui.card_header(f"Power Data - {outcome}"),
+            ui.card_header(f"Power Data - {reverse_outcome_map(outcome)}"),
             ui.layout_columns(
                 ui.output_text_verbatim(f"{name}_calculation_text"),
                 ui.output_image(f"{name}_curve_img", inline=True),

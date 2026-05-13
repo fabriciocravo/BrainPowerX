@@ -1,4 +1,4 @@
-%% generate_plots.m
+  %% generate_plots.m
 % Generates power curve plots, heatmaps, and CSV exports for BrainPowerX.
 %
 % Handles two file structures:
@@ -37,12 +37,12 @@ fprintf('Started Generate Plot Scripts\n');
 % ─────────────────────────────────────────────
 
 % HPC - uncoment the desired one
-data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_fc"];
+% data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_fc"];
+% ABCD
+data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/abcd_100_reps"];
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-output_root = fullfile(fileparts(mfilename('fullpath')), 'data', 'hcp_fc_tasks');
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 addpath(genpath(fileparts(mfilename('fullpath'))));
 
 % Todo
@@ -78,7 +78,7 @@ for file_idx = 1:length(power_mat_files)
         % New structure
         dataset     = meta_data.dataset;
         map_type    = meta_data.map;
-        task        = meta_data.output;
+        task        = meta_data.study_name;
         test        = meta_data.test_type;
         n_subs      = meta_data.n_subs;
         mask        = meta_data.mask;
@@ -95,8 +95,9 @@ for file_idx = 1:length(power_mat_files)
         edge_groups = meta_data.rep_parameters.edge_groups;
     end
 
-    % There will likely need to be a function here to handle edge cases
-    % For example, datasets that were named differently, etc
+    % Task requires proper mapping due to dataset bad names
+    task =  map_task_to_outcome(dataset, task)
+
 
     grouping_key = make_valid_name( ...
       sprintf('%s_%s_%s_%s', dataset, map_type, task, test) ...
@@ -518,4 +519,4 @@ for key_idx = 1:length(grouping_keys)
 
 end
 
-fprintf('\nAll done! Outputs under: %s\n', output_root);
+fprintf('\nAll done!');

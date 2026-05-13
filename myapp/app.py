@@ -13,7 +13,11 @@ import json
 # Folder name format: {dataset}_{map_type}_{task}_{test_type}
 # e.g. hcp_fc_REST_EMOTION_t
 # ---------------------------------------------------------------------------
-
+"""
+    Todo:
+    - Change figures, put legend outside the main image
+    - HCP first
+"""
 
 BASE_DIR = Path(__file__).parent
 
@@ -103,17 +107,17 @@ app_ui = ui.page_fluid(
                 options={"placeholder": "Average"},
             ),
             ui.hr(),
-            ui.h5("Power Analysis"),
+            ui.h5("Desired Power or Sample Size"),
             ui.input_select(
                 "analysis_mode", None,
                 choices={
-                    "n_subjects": "Give sample size → estimate power",
-                    "desired_power": "Give desired power → estimate N",
+                    "desired_power": "Desired power → Est. Subjects",
+                    "n_subjects": "Sample size → Est. Power",
                 },
-                selected="n_subjects",
+                selected="desired_power",
             ),
             ui.hr(),
-            ui.h5("Analysis"),
+            ui.h5("Analysis Value (Desired Power or Sample Size)"),
             ui.input_text(
                 "analysis_value", None,
                 placeholder="e.g. 80",
@@ -191,7 +195,16 @@ def server(input, output, session):
             set_test_types = input_lookup(TEST_TYPES)
 
         results = data_set_results & map_results & set_outcomes & set_test_types
-        results = sorted(list(results))
+        # Sort according to correct dataset
+        DATASET_SORT_ORDER = {dataset: i for i, dataset in enumerate(["HCP", "UKB", "ABCD"])}
+
+        def dataset_sort_key(folder_name):
+            for dataset, rank in DATASET_SORT_ORDER.items():
+                if dataset in folder_name:
+                    return rank
+            return len(DATASET_SORT_ORDER)
+
+        results = sorted(list(results), key=dataset_sort_key)
 
         if not results:
             results = INDEX["HCP"] # Return hcp plots as default
@@ -232,7 +245,7 @@ def server(input, output, session):
             analysis_value = float(input.analysis_value())
 
             P, a, b = utils.get_result_value_from_meta_data(metadata, type_of_curve, method)
-            
+
             estimation = utils.find_estimation_of_desired_value(
                 analysis_value, analysis_mode, P, a, b
             )
@@ -327,7 +340,7 @@ def server(input, output, session):
                     result_line = f"For desired {metric} of {analysis_value:.2f}:\n \
                     ~{int(estimation)} subjects required{warning}"
 
-            return f"{fit_line}\n{result_line}"
+            return f"{result_line}\n{fit_line}"
 
 
     @reactive.effect

@@ -21,9 +21,14 @@ function result = fit_power_curve(ns, proportions, varargin)
      try
         if exist('OCTAVE_VERSION', 'builtin')
             % Octave version
-            fitted_params = sqp(initial_params, cost_func,
-              [], [], lb, ub ...
-            );
+
+            try
+              fitted_params = sqp(initial_params, cost_func,
+                [], [], lb, ub ...
+              );
+            catch
+              fitted_params = zeros(size(initial_params));
+            end
 
         else
             % MATLAB

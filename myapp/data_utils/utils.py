@@ -109,9 +109,9 @@ def find_estimation_of_desired_value(
         b: float,
     ) -> float:
 
-    if analysis_type == 'n_subjects':
+    if analysis_type == 'desired_power':
         estimation = get_subject_number_from_desired_power(user_value, P, a, b)
-    elif analysis_type == 'desired_power':
+    elif analysis_type == 'n_subjects':
         estimation = get_power_from_desired_subjects(user_value, P, a, b)
     else:
         raise ValueError('Analysis type not supported')
