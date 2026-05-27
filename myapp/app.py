@@ -1,6 +1,7 @@
 import numpy as np
 from shiny import App, ui, render, reactive
 
+from data_utils.map_files.method_aliases import METHOD_ALIASES
 from data_utils.ui_generator import power_heatmap_card
 from data_utils.menu_options import OPTIONS
 from data_utils.css import _CSS
@@ -60,7 +61,7 @@ app_ui = ui.page_fluid(
             ui.input_selectize(
                 "dataset", None,
                 choices=DATASETS,
-                selected=["HCP"],
+                selected=["HC"],
                 multiple=True,
                 options={"placeholder": "All datasets"},
             ),
@@ -94,7 +95,7 @@ app_ui = ui.page_fluid(
                 "methods", None,
                 choices=METHODS,
                 multiple=False,
-                selected="Parametric_FWER",
+                selected="Parametric FDR",
                 options={"placeholder": "All methods"},
             ),
             ui.hr(),
@@ -240,9 +241,12 @@ def server(input, output, session):
             else:
                 raise TypeError('Power image type not correctly recognized from options')
 
-            method = input.methods()
+            alias = input.methods()
             analysis_mode = input.analysis_mode()
             analysis_value = float(input.analysis_value())
+
+            alias_list = METHOD_ALIASES[alias]
+            method = utils.return_method_from_alias(alias_list, metadata["method_list"])
 
             P, a, b = utils.get_result_value_from_meta_data(metadata, type_of_curve, method)
 

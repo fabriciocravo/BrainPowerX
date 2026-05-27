@@ -455,33 +455,34 @@ for key_idx = 1:length(grouping_keys)
                 case 'act'
 
                     fig = figure('Visible', 'off', 'Color', [0.06 0.07 0.10], ...
-                                 'Position', [0 0 800 700]);
+                             'Position', [0 0 800 800]);
                     ax  = axes('Parent', fig, ...
                                'Color',  [0.10 0.11 0.18], ...
                                'XColor', [0.58 0.64 0.73], ...
                                'YColor', [0.58 0.64 0.73]);
-
                     [x, y, z] = ind2sub(size(power_matrix), find(grouped_data.mask));
                     values = power_matrix(grouped_data.mask);
-                    scatter3(ax, x, y, z, 10, values, 'filled');
-
+                    above_thresh = values > 5;
+                    scatter3(ax, x(above_thresh), y(above_thresh), z(above_thresh), 5, values(above_thresh), 'filled');
                     colorbar_handle = colorbar(ax);
                     set(get(colorbar_handle, 'label'), 'string', 'Power (%)');
                     set(get(colorbar_handle, 'label'), 'color', [0 0 0]);
                     set(get(colorbar_handle, 'label'), 'FontSize', 14);
                     clim(ax, [0 100]);
-
+                    custom_map = [ones(256,1), linspace(0.85, 0.0, 256)', linspace(0.85, 0.0, 256)'];
+                    colormap(ax, custom_map);
+                    view(ax, 45, 30);
+                    axis(ax, 'equal');
+                    axis(ax, 'off');
                     dataset_title  = strrep(upper(dataset),  '_', ' ');
                     map_type_title = strrep(upper(map_type), '_', ' ');
                     task_title     = strrep(task,   '_', ' ');
                     test_title     = strrep(test,   '_', ' ');
                     method_title   = strrep(method, '_', ' ');
-
                     title(ax, sprintf('%s | %s | %s | test=%s\n%s  |  n=%d', ...
                         dataset_title, map_type_title, task_title, ...
                         test_title, method_title, current_n), ...
                         'Color', [0 0 0], 'FontSize', 14);
-
                     save_figure(
                         fig, ...
                         fullfile(output_group_dir, sprintf('heatmap_%s_%s.png', method, sample_size_key)), ...

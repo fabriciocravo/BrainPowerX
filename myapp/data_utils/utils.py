@@ -4,6 +4,7 @@ from .map_files.file_to_outcome import FILE_TO_OUTCOME
 from .map_files.method_to_display_name import METHOD_DISPLAY_NAMES
 from .map_files.outcome_to_file import OUTCOME_TO_FILE
 from .map_files.non_heatmap_method_names import NON_HEATMAP_METHODS
+from .map_files.method_aliases import METHOD_NAME_TO_ALIAS
 
 def compile_options(options_dict):
 
@@ -54,23 +55,28 @@ def reverse_outcome_map(outcome_file_name: str) -> str:
 
 def non_heatmap_methods(method: str) -> bool:
 
-    if method in NON_HEATMAP_METHODS:
+    alias = METHOD_NAME_TO_ALIAS[method]
+
+    if alias in NON_HEATMAP_METHODS:
         return True
     else:
         return False
 
 
+def return_method_from_alias(alias_list, meta_data_method_list):
+
+    for method_name in alias_list:
+        if method_name in meta_data_method_list:
+            return method_name
+    else:
+        raise ValueError("Method Not Found in Meta Data")
+
 # This could be changed for an interpolation if more datapoints are added
 def get_result_value_from_meta_data(
         metadata: dict,
         type_of_curve: str,
-        method: str,
+        method: iter,
     ) -> tuple:
-
-    #print("type of curve")
-    #print(type_of_curve)
-    #print("method")
-    #print(method)
 
     # Meta data is clearly a dictionary - not a hashable
     P = metadata[type_of_curve][method]["P"]
