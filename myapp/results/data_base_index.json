@@ -1,136 +1,136 @@
 {
-    "FC": [
-        "abcd_fc_cbcl_withdrawn_delta_r",
-        "abcd_fc_cbcl_anx_dep_fu1_r",
-        "abcd_fc_cbcl_rule_breaking_r",
-        "abcd_fc_cbcl_internalizing_fu1_r",
-        "abcd_fc_cbcl_somatic_delta_r",
-        "abcd_fc_wisc_v_iq_r",
-        "abcd_fc_cbcl_thought_r",
+    "r": [
         "abcd_fc_cbcl_thought_fu1_r",
-        "abcd_fc_cbcl_anx_dep_r",
-        "abcd_fc_cbcl_somatic_fu1_r",
-        "hcp_fc_REST_WM_t",
-        "abcd_fc_cbcl_aggressive_r",
-        "abcd_fc_upps_sensation_seeking_r",
-        "abcd_fc_cbcl_aggressive_fu1_r",
-        "abcd_fc_cbcl_social_delta_r",
-        "abcd_fc_cbcl_internalizing_r",
-        "abcd_fc_cbcl_thought_delta_r",
-        "abcd_fc_cbcl_attention_fu1_r",
-        "abcd_fc_bmi_z_r",
-        "abcd_fc_cbcl_rule_breaking_fu1_r",
-        "abcd_fc_cbcl_withdrawn_r",
-        "abcd_fc_cbcl_externalizing_fu1_r",
-        "hcp_fc_REST_SOCIAL_t",
-        "abcd_fc_cbcl_aggressive_delta_r",
-        "abcd_fc_cbcl_social_fu1_r",
-        "hcp_fc_REST_RELATIONAL_t",
-        "abcd_fc_cbcl_withdrawn_fu1_r",
-        "abcd_fc_cbcl_somatic_r",
-        "abcd_fc_cbcl_externalizing_r",
-        "abcd_fc_upps_pos_urgency_r",
-        "abcd_fc_cbcl_attention_r",
-        "hcp_fc_REST_EMOTION_t",
-        "abcd_fc_sex_t2",
-        "abcd_fc_cbcl_social_r",
         "abcd_fc_upps_lack_perseverance_r",
+        "abcd_fc_cbcl_social_delta_r",
         "abcd_fc_cbcl_externalizing_delta_r",
+        "abcd_fc_wisc_v_iq_r",
+        "abcd_fc_cbcl_withdrawn_fu1_r",
+        "abcd_fc_cbcl_somatic_delta_r",
+        "abcd_fc_cbcl_anx_dep_delta_r",
+        "abcd_fc_cbcl_internalizing_fu1_r",
+        "abcd_fc_bmi_z_r",
+        "abcd_fc_cbcl_thought_r",
+        "abcd_fc_cbcl_thought_delta_r",
         "abcd_fc_cbcl_internalizing_delta_r",
+        "abcd_fc_cbcl_attention_delta_r",
+        "abcd_fc_cbcl_attention_r",
+        "abcd_fc_substance_use_r",
+        "abcd_fc_upps_sensation_seeking_r",
+        "abcd_fc_cbcl_externalizing_fu1_r",
+        "abcd_fc_cbcl_rule_breaking_r",
+        "abcd_fc_cbcl_externalizing_r",
+        "abcd_fc_cbcl_withdrawn_delta_r",
+        "abcd_fc_cbcl_social_r",
+        "abcd_fc_upps_pos_urgency_r",
+        "abcd_fc_cbcl_somatic_r",
+        "abcd_fc_cbcl_withdrawn_r",
+        "abcd_fc_cbcl_somatic_fu1_r",
+        "abcd_fc_cbcl_anx_dep_r",
+        "abcd_fc_cbcl_aggressive_fu1_r",
         "abcd_fc_age_r",
+        "abcd_fc_cbcl_attention_fu1_r",
+        "abcd_fc_cbcl_rule_breaking_fu1_r",
+        "abcd_fc_cbcl_social_fu1_r",
+        "abcd_fc_upps_neg_urgency_r",
+        "abcd_fc_cbcl_aggressive_delta_r",
+        "abcd_fc_cbcl_aggressive_r",
+        "abcd_fc_cbcl_internalizing_r",
         "abcd_fc_upps_lack_planning_r",
         "abcd_fc_cbcl_rule_breaking_delta_r",
+        "abcd_fc_cbcl_anx_dep_fu1_r"
+    ],
+    "FC": [
+        "abcd_fc_cbcl_thought_fu1_r",
+        "abcd_fc_upps_lack_perseverance_r",
+        "abcd_fc_cbcl_social_delta_r",
+        "abcd_fc_cbcl_externalizing_delta_r",
+        "abcd_fc_wisc_v_iq_r",
+        "abcd_fc_cbcl_withdrawn_fu1_r",
+        "abcd_fc_cbcl_somatic_delta_r",
+        "abcd_fc_cbcl_anx_dep_delta_r",
+        "abcd_fc_cbcl_internalizing_fu1_r",
+        "abcd_fc_bmi_z_r",
+        "abcd_fc_cbcl_thought_r",
+        "abcd_fc_cbcl_thought_delta_r",
+        "abcd_fc_cbcl_internalizing_delta_r",
         "hcp_fc_REST_GAMBLING_t",
-        "abcd_fc_substance_use_r",
-        "abcd_fc_upps_neg_urgency_r",
+        "hcp_fc_REST_WM_t",
         "abcd_fc_cbcl_attention_delta_r",
-        "abcd_fc_cbcl_anx_dep_delta_r"
+        "abcd_fc_cbcl_attention_r",
+        "abcd_fc_sex_t2",
+        "abcd_fc_substance_use_r",
+        "abcd_fc_upps_sensation_seeking_r",
+        "abcd_fc_cbcl_externalizing_fu1_r",
+        "abcd_fc_cbcl_rule_breaking_delta_r",
+        "abcd_fc_cbcl_rule_breaking_r",
+        "hcp_fc_REST_RELATIONAL_t",
+        "abcd_fc_cbcl_externalizing_r",
+        "abcd_fc_cbcl_withdrawn_delta_r",
+        "abcd_fc_cbcl_social_r",
+        "abcd_fc_upps_pos_urgency_r",
+        "abcd_fc_cbcl_somatic_r",
+        "abcd_fc_cbcl_somatic_fu1_r",
+        "abcd_fc_cbcl_anx_dep_r",
+        "abcd_fc_cbcl_aggressive_fu1_r",
+        "abcd_fc_age_r",
+        "abcd_fc_cbcl_attention_fu1_r",
+        "abcd_fc_cbcl_rule_breaking_fu1_r",
+        "hcp_fc_REST_SOCIAL_t",
+        "abcd_fc_cbcl_social_fu1_r",
+        "abcd_fc_upps_neg_urgency_r",
+        "abcd_fc_cbcl_aggressive_delta_r",
+        "abcd_fc_cbcl_aggressive_r",
+        "abcd_fc_cbcl_internalizing_r",
+        "abcd_fc_upps_lack_planning_r",
+        "hcp_fc_REST_EMOTION_t",
+        "abcd_fc_cbcl_withdrawn_r",
+        "abcd_fc_cbcl_anx_dep_fu1_r"
+    ],
+    "ABCD": [
+        "abcd_fc_cbcl_thought_fu1_r",
+        "abcd_fc_upps_lack_perseverance_r",
+        "abcd_fc_cbcl_social_delta_r",
+        "abcd_fc_cbcl_externalizing_delta_r",
+        "abcd_fc_wisc_v_iq_r",
+        "abcd_fc_cbcl_withdrawn_fu1_r",
+        "abcd_fc_cbcl_somatic_delta_r",
+        "abcd_fc_cbcl_anx_dep_delta_r",
+        "abcd_fc_cbcl_internalizing_fu1_r",
+        "abcd_fc_bmi_z_r",
+        "abcd_fc_cbcl_thought_r",
+        "abcd_fc_cbcl_thought_delta_r",
+        "abcd_fc_cbcl_internalizing_delta_r",
+        "abcd_fc_cbcl_attention_delta_r",
+        "abcd_fc_cbcl_attention_r",
+        "abcd_fc_sex_t2",
+        "abcd_fc_substance_use_r",
+        "abcd_fc_upps_sensation_seeking_r",
+        "abcd_fc_cbcl_externalizing_fu1_r",
+        "abcd_fc_cbcl_rule_breaking_delta_r",
+        "abcd_fc_cbcl_rule_breaking_r",
+        "abcd_fc_cbcl_externalizing_r",
+        "abcd_fc_cbcl_withdrawn_delta_r",
+        "abcd_fc_cbcl_social_r",
+        "abcd_fc_upps_pos_urgency_r",
+        "abcd_fc_cbcl_somatic_r",
+        "abcd_fc_cbcl_somatic_fu1_r",
+        "abcd_fc_cbcl_anx_dep_r",
+        "abcd_fc_cbcl_aggressive_fu1_r",
+        "abcd_fc_age_r",
+        "abcd_fc_cbcl_attention_fu1_r",
+        "abcd_fc_cbcl_rule_breaking_fu1_r",
+        "abcd_fc_cbcl_social_fu1_r",
+        "abcd_fc_upps_neg_urgency_r",
+        "abcd_fc_cbcl_aggressive_delta_r",
+        "abcd_fc_cbcl_aggressive_r",
+        "abcd_fc_cbcl_internalizing_r",
+        "abcd_fc_upps_lack_planning_r",
+        "abcd_fc_cbcl_withdrawn_r",
+        "abcd_fc_cbcl_anx_dep_fu1_r"
     ],
     "age": [
         "abcd_fc_age_r"
-    ],
-    "r": [
-        "abcd_fc_cbcl_withdrawn_delta_r",
-        "abcd_fc_cbcl_anx_dep_fu1_r",
-        "abcd_fc_cbcl_rule_breaking_r",
-        "abcd_fc_cbcl_internalizing_fu1_r",
-        "abcd_fc_cbcl_somatic_delta_r",
-        "abcd_fc_wisc_v_iq_r",
-        "abcd_fc_cbcl_thought_r",
-        "abcd_fc_cbcl_thought_fu1_r",
-        "abcd_fc_cbcl_anx_dep_r",
-        "abcd_fc_cbcl_somatic_fu1_r",
-        "abcd_fc_upps_sensation_seeking_r",
-        "abcd_fc_cbcl_aggressive_r",
-        "abcd_fc_cbcl_aggressive_fu1_r",
-        "abcd_fc_cbcl_social_delta_r",
-        "abcd_fc_cbcl_internalizing_r",
-        "abcd_fc_cbcl_thought_delta_r",
-        "abcd_fc_cbcl_attention_fu1_r",
-        "abcd_fc_bmi_z_r",
-        "abcd_fc_cbcl_rule_breaking_fu1_r",
-        "abcd_fc_cbcl_withdrawn_r",
-        "abcd_fc_cbcl_externalizing_fu1_r",
-        "abcd_fc_cbcl_aggressive_delta_r",
-        "abcd_fc_cbcl_social_fu1_r",
-        "abcd_fc_cbcl_withdrawn_fu1_r",
-        "abcd_fc_cbcl_somatic_r",
-        "abcd_fc_cbcl_externalizing_r",
-        "abcd_fc_upps_pos_urgency_r",
-        "abcd_fc_cbcl_attention_r",
-        "abcd_fc_cbcl_social_r",
-        "abcd_fc_upps_lack_perseverance_r",
-        "abcd_fc_cbcl_externalizing_delta_r",
-        "abcd_fc_cbcl_internalizing_delta_r",
-        "abcd_fc_age_r",
-        "abcd_fc_upps_lack_planning_r",
-        "abcd_fc_cbcl_rule_breaking_delta_r",
-        "abcd_fc_substance_use_r",
-        "abcd_fc_upps_neg_urgency_r",
-        "abcd_fc_cbcl_attention_delta_r",
-        "abcd_fc_cbcl_anx_dep_delta_r"
-    ],
-    "ABCD": [
-        "abcd_fc_cbcl_withdrawn_delta_r",
-        "abcd_fc_cbcl_anx_dep_fu1_r",
-        "abcd_fc_cbcl_rule_breaking_r",
-        "abcd_fc_cbcl_internalizing_fu1_r",
-        "abcd_fc_cbcl_somatic_delta_r",
-        "abcd_fc_wisc_v_iq_r",
-        "abcd_fc_cbcl_thought_r",
-        "abcd_fc_cbcl_thought_fu1_r",
-        "abcd_fc_cbcl_anx_dep_r",
-        "abcd_fc_cbcl_somatic_fu1_r",
-        "abcd_fc_upps_sensation_seeking_r",
-        "abcd_fc_cbcl_aggressive_r",
-        "abcd_fc_cbcl_aggressive_fu1_r",
-        "abcd_fc_cbcl_social_delta_r",
-        "abcd_fc_cbcl_internalizing_r",
-        "abcd_fc_cbcl_thought_delta_r",
-        "abcd_fc_cbcl_attention_fu1_r",
-        "abcd_fc_bmi_z_r",
-        "abcd_fc_cbcl_rule_breaking_fu1_r",
-        "abcd_fc_cbcl_withdrawn_r",
-        "abcd_fc_cbcl_externalizing_fu1_r",
-        "abcd_fc_cbcl_aggressive_delta_r",
-        "abcd_fc_cbcl_social_fu1_r",
-        "abcd_fc_cbcl_withdrawn_fu1_r",
-        "abcd_fc_cbcl_somatic_r",
-        "abcd_fc_cbcl_externalizing_r",
-        "abcd_fc_upps_pos_urgency_r",
-        "abcd_fc_cbcl_attention_r",
-        "abcd_fc_sex_t2",
-        "abcd_fc_cbcl_social_r",
-        "abcd_fc_upps_lack_perseverance_r",
-        "abcd_fc_cbcl_externalizing_delta_r",
-        "abcd_fc_cbcl_internalizing_delta_r",
-        "abcd_fc_age_r",
-        "abcd_fc_upps_lack_planning_r",
-        "abcd_fc_cbcl_rule_breaking_delta_r",
-        "abcd_fc_substance_use_r",
-        "abcd_fc_upps_neg_urgency_r",
-        "abcd_fc_cbcl_attention_delta_r",
-        "abcd_fc_cbcl_anx_dep_delta_r"
     ],
     "cbcl_externalizing_fu1": [
         "abcd_fc_cbcl_externalizing_fu1_r"
@@ -159,22 +159,32 @@
     "upps_lack_planning": [
         "abcd_fc_upps_lack_planning_r"
     ],
-    "REST_EMOTION": [
+    "t": [
+        "hcp_act_EMOTION_t",
+        "hcp_act_WM_t",
+        "hcp_act_SOCIAL_t",
+        "hcp_fc_REST_SOCIAL_t",
+        "hcp_fc_REST_RELATIONAL_t",
+        "hcp_fc_REST_GAMBLING_t",
+        "hcp_fc_REST_WM_t",
+        "hcp_act_RELATIONAL_t",
+        "hcp_act_GAMBLING_t",
         "hcp_fc_REST_EMOTION_t"
     ],
-    "t": [
-        "hcp_fc_REST_GAMBLING_t",
-        "hcp_fc_REST_SOCIAL_t",
-        "hcp_fc_REST_EMOTION_t",
-        "hcp_fc_REST_RELATIONAL_t",
-        "hcp_fc_REST_WM_t"
-    ],
     "HCP": [
-        "hcp_fc_REST_GAMBLING_t",
+        "hcp_act_EMOTION_t",
+        "hcp_act_WM_t",
+        "hcp_act_SOCIAL_t",
         "hcp_fc_REST_SOCIAL_t",
-        "hcp_fc_REST_EMOTION_t",
         "hcp_fc_REST_RELATIONAL_t",
-        "hcp_fc_REST_WM_t"
+        "hcp_fc_REST_GAMBLING_t",
+        "hcp_fc_REST_WM_t",
+        "hcp_act_RELATIONAL_t",
+        "hcp_act_GAMBLING_t",
+        "hcp_fc_REST_EMOTION_t"
+    ],
+    "REST_EMOTION": [
+        "hcp_fc_REST_EMOTION_t"
     ],
     "cbcl_attention": [
         "abcd_fc_cbcl_attention_r"
@@ -190,6 +200,16 @@
     ],
     "cbcl_rule_breaking": [
         "abcd_fc_cbcl_rule_breaking_r"
+    ],
+    "ACT": [
+        "hcp_act_WM_t",
+        "hcp_act_RELATIONAL_t",
+        "hcp_act_EMOTION_t",
+        "hcp_act_SOCIAL_t",
+        "hcp_act_GAMBLING_t"
+    ],
+    "RELATIONAL": [
+        "hcp_act_RELATIONAL_t"
     ],
     "cbcl_thought_fu1": [
         "abcd_fc_cbcl_thought_fu1_r"
@@ -221,6 +241,9 @@
     "cbcl_somatic_fu1": [
         "abcd_fc_cbcl_somatic_fu1_r"
     ],
+    "GAMBLING": [
+        "hcp_act_GAMBLING_t"
+    ],
     "cbcl_internalizing": [
         "abcd_fc_cbcl_internalizing_r"
     ],
@@ -229,6 +252,9 @@
     ],
     "cbcl_thought": [
         "abcd_fc_cbcl_thought_r"
+    ],
+    "EMOTION": [
+        "hcp_act_EMOTION_t"
     ],
     "cbcl_social": [
         "abcd_fc_cbcl_social_r"
@@ -245,14 +271,20 @@
     "bmi_z": [
         "abcd_fc_bmi_z_r"
     ],
-    "sex": [
-        "abcd_fc_sex_t2"
+    "WM": [
+        "hcp_act_WM_t"
     ],
     "t2": [
         "abcd_fc_sex_t2"
     ],
+    "sex": [
+        "abcd_fc_sex_t2"
+    ],
     "cbcl_rule_breaking_fu1": [
         "abcd_fc_cbcl_rule_breaking_fu1_r"
+    ],
+    "SOCIAL": [
+        "hcp_act_SOCIAL_t"
     ],
     "cbcl_somatic_delta": [
         "abcd_fc_cbcl_somatic_delta_r"

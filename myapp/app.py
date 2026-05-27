@@ -60,7 +60,7 @@ app_ui = ui.page_fluid(
             ui.input_selectize(
                 "dataset", None,
                 choices=DATASETS,
-                selected=["HPC"],
+                selected=["HCP"],
                 multiple=True,
                 options={"placeholder": "All datasets"},
             ),
@@ -326,7 +326,7 @@ def server(input, output, session):
                 return f"For method {method},\n the {metric} does not apply"
 
             fit_line = (f"Fit for {method}:"
-                        f"\n {metric.capitalize()}(n) = {P:.3f} / (1 + ({a:.3f} / n)^{b:.3f})")
+                        f"\n {metric.capitalize()}(n) = {P:.3f}/(1+({a:.3f}/n)^{b:.3f})")
 
             if analysis_mode == "n_subjects":
                 warning = f"\n Below minimum estimated N ({sub_list[0]})" if analysis_value < sub_list[0] else ""

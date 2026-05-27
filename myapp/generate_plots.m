@@ -36,10 +36,10 @@ fprintf('Started Generate Plot Scripts\n');
 %  CONFIG
 % ─────────────────────────────────────────────
 
-% HPC - uncoment the desired one
-% data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_fc"];
-% ABCD
-data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/abcd_100_reps"];
+% comment and uncomment for desired one
+% data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_fc"]; % HCP
+% data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/abcd_100_reps"]; % ABCD
+data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hpc_activation"] % HCP
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,7 +97,6 @@ for file_idx = 1:length(power_mat_files)
 
     % Task requires proper mapping due to dataset bad names
     task =  map_task_to_outcome(dataset, task)
-
 
     grouping_key = make_valid_name( ...
       sprintf('%s_%s_%s_%s', dataset, map_type, task, test) ...
@@ -200,7 +199,7 @@ for key_idx = 1:length(grouping_keys)
 
     % Average power figures
     fig = figure('Visible', 'off', 'Color', [0.06 0.07 0.10], ...
-                 'Position', [0 0 900 500]);
+                 'Position', [0 0 1100 500]);
     ax  = axes('Parent', fig, ...
                'Color',     [0.10 0.11 0.18], ...
                'XColor',    [0.58 0.64 0.73], ...
@@ -250,7 +249,7 @@ for key_idx = 1:length(grouping_keys)
 
     legend(ax, 'TextColor', [0.89 0.91 0.94], ...
         'Color', [0.10 0.11 0.18], 'EdgeColor', [0.30 0.33 0.45], ...
-        'Location', 'southeast');
+        'Location', 'eastoutside');
     xlabel(ax, 'Sample size (n)', 'Color', [0 0 0], 'FontSize', 12);
     ylabel(ax, 'Power (%)',       'Color', [0 0 0], 'FontSize', 12);
     ylim(ax, [-2 105]);
@@ -359,7 +358,7 @@ for key_idx = 1:length(grouping_keys)
     for thr_idx = 1:length(POWER_THRESHOLDS)
 
         fig = figure('Visible', 'off', 'Color', [0.06 0.07 0.10], ...
-                     'Position', [0 0 900 380]);
+                     'Position', [0 0 1100 380]);
         ax = axes(fig);
         set(ax, 'Color',     [0.10 0.11 0.18], ...
                 'XColor',    [0.58 0.64 0.73], ...
@@ -401,7 +400,8 @@ for key_idx = 1:length(grouping_keys)
         test_title = strrep(test, '_', ' ');
 
         legend(ax, 'TextColor', [0.89 0.91 0.94], ...
-            'Color', [0.10 0.11 0.18], 'EdgeColor', [0.30 0.33 0.45]);
+            'Color', [0.10 0.11 0.18], 'EdgeColor', [0.30 0.33 0.45],
+            'Location', 'eastoutside');
         title(ax, sprintf('%s | %s | %s | test=%s\n%s', ...
             dataset_title, map_type_title, taks_title, ...
             test_title, threshold_labels{thr_idx}), ...
@@ -430,13 +430,18 @@ for key_idx = 1:length(grouping_keys)
 
             if numel(power_vec) == n_edges
                 % Edge case — direct unflatten
-                power_matrix = unflatten_matrix(power_vec, grouped_data.mask);
+                power_matrix = unflatten_matrix(
+                    power_vec, ...
+                    grouped_data.mask,
+                    map_type
+                    );
 
             elseif max(grouped_data.edge_groups(:)) == numel(power_vec)
                 % Network case — project network values into edge space, then unflatten
                 power_matrix = unflatten_network( ...
                     power_vec, ...
-                    grouped_data.edge_groups ...
+                    grouped_data.edge_groups, ...
+                    map_type
                     );
 
             else
@@ -445,39 +450,88 @@ for key_idx = 1:length(grouping_keys)
                 continue
             end
 
-            fig = figure('Visible', 'off', 'Color', [0.06 0.07 0.10], ...
+            switch map_type
+
+                case 'act'
+
+                    fig = figure('Visible', 'off', 'Color', [0.06 0.07 0.10], ...
+                                 'Position', [0 0 800 700]);
+                    ax  = axes('Parent', fig, ...
+                               'Color',  [0.10 0.11 0.18], ...
+                               'XColor', [0.58 0.64 0.73], ...
+                               'YColor', [0.58 0.64 0.73]);
+
+                    [x, y, z] = ind2sub(size(power_matrix), find(grouped_data.mask));
+                    values = power_matrix(grouped_data.mask);
+                    scatter3(ax, x, y, z, 10, values, 'filled');
+
+                    colorbar_handle = colorbar(ax);
+                    set(get(colorbar_handle, 'label'), 'string', 'Power (%)');
+                    set(get(colorbar_handle, 'label'), 'color', [0 0 0]);
+                    set(get(colorbar_handle, 'label'), 'FontSize', 14);
+                    clim(ax, [0 100]);
+
+                    dataset_title  = strrep(upper(dataset),  '_', ' ');
+                    map_type_title = strrep(upper(map_type), '_', ' ');
+                    task_title     = strrep(task,   '_', ' ');
+                    test_title     = strrep(test,   '_', ' ');
+                    method_title   = strrep(method, '_', ' ');
+
+                    title(ax, sprintf('%s | %s | %s | test=%s\n%s  |  n=%d', ...
+                        dataset_title, map_type_title, task_title, ...
+                        test_title, method_title, current_n), ...
+                        'Color', [0 0 0], 'FontSize', 14);
+
+                    save_figure(
+                        fig, ...
+                        fullfile(output_group_dir, sprintf('heatmap_%s_%s.png', method, sample_size_key)), ...
+                        150, ...
+                        [0.06 0.07 0.10] ...
+                        );
+                    close(fig);
+
+                case 'fc'
+
+                    fig = figure('Visible', 'off', 'Color', [0.06 0.07 0.10], ...
                          'Position', [0 0 800 700]);
-            ax  = axes('Parent', fig, ...
-                       'Color',  [0.10 0.11 0.18], ...
-                       'XColor', [0.58 0.64 0.73], ...
-                       'YColor', [0.58 0.64 0.73]);
+                    ax  = axes('Parent', fig, ...
+                               'Color',  [0.10 0.11 0.18], ...
+                               'XColor', [0.58 0.64 0.73], ...
+                               'YColor', [0.58 0.64 0.73]);
 
-            imagesc(ax, power_matrix, [0 100]);
-            colorbar_handle = colorbar(ax);
-            set(get(colorbar_handle, 'label'), 'string', 'Power (%)');
-            set(get(colorbar_handle, 'label'), 'color', [0.89 0.91 0.94]);
+                    imagesc(ax, power_matrix, [0 100]);
+                    colorbar_handle = colorbar(ax);
+                    set(get(colorbar_handle, 'label'), 'string', 'Power (%)');
+                    set(get(colorbar_handle, 'label'), 'color', [0 0 0]);
+                    set(get(colorbar_handle, 'label'), 'FontSize', 14);
 
-            dataset_title = strrep(upper(dataset), '_', ' ');
-            map_type_title = strrep(upper(map_type), '_', ' ');
-            task_title = strrep(task, '_', ' ');
-            test_title = strrep(test, '_', ' ');
-            method_title = strrep(method, '_', ' ');
+                    dataset_title = strrep(upper(dataset), '_', ' ');
+                    map_type_title = strrep(upper(map_type), '_', ' ');
+                    task_title = strrep(task, '_', ' ');
+                    test_title = strrep(test, '_', ' ');
+                    method_title = strrep(method, '_', ' ');
 
-            title(ax, sprintf('%s | %s | %s | test=%s\n%s  |  n=%d', ...
-                dataset_title, map_type_title, task_title, ...
-                test_title, method_title, current_n), ...
-                'Color', [0 0 0], 'FontSize', 14);
-            xlabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
-            ylabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
-            axis(ax, 'square');
+                    title(ax, sprintf('%s | %s | %s | test=%s\n%s  |  n=%d', ...
+                        dataset_title, map_type_title, task_title, ...
+                        test_title, method_title, current_n), ...
+                        'Color', [0 0 0], 'FontSize', 14);
+                    xlabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
+                    ylabel(ax, 'Node index', 'Color', [0 0 0], 'FontSize', 12);
+                    axis(ax, 'square');
 
-            save_figure(
-              fig, ...
-              fullfile(output_group_dir, sprintf('heatmap_%s_%s.png', method, sample_size_key)), ...
-              150, ...
-              [0.06 0.07 0.10] ...
-              );
-            close(fig);
+                    save_figure(
+                      fig, ...
+                      fullfile(output_group_dir, sprintf('heatmap_%s_%s.png', method, sample_size_key)), ...
+                      150, ...
+                      [0.06 0.07 0.10] ...
+                      );
+                    close(fig);
+
+                otherwise
+                    error('Heatmap map_type %s not supported.', map_type);
+
+            endswitch
+
         end
 
     end
@@ -519,4 +573,4 @@ for key_idx = 1:length(grouping_keys)
 
 end
 
-fprintf('\nAll done!');
+fprintf('\nAll done!\n');

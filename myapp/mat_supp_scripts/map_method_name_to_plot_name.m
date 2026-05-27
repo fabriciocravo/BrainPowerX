@@ -10,9 +10,13 @@ function method_plot_name = map_method_name_to_plot_name(method_name)
     method_plot_name = 'Cluster Size';
   case 'Size_cpp'
     method_plot_name = 'Cluster Size';
+  case 'Size_Node_cpp'
+    method_plot_name = 'Size';
   case 'Fast_TFCE'
     method_plot_name = 'Cluster TFCE';
   case 'Fast_TFCE_cpp'
+    method_plot_name = 'Cluster TFCE';
+  case 'IC_TFCE_Node_cpp'
     method_plot_name = 'Cluster TFCE';
   case 'Constrained_FWER'
     method_plot_name = 'Network FWER';

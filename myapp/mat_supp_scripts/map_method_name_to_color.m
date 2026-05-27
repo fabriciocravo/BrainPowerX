@@ -10,9 +10,13 @@ function color = map_method_name_to_color(method_name)
     color = [0.55 0.90 0.55];   % light green
   case 'Size_cpp'
     color = [0.55 0.90 0.55];   % light green
+  case 'Size_Node_cpp'
+    color = [0.55 0.90 0.55];   % light green
   case 'Fast_TFCE'
     color = [0.15 0.70 0.35];   % green
   case 'Fast_TFCE_cpp'
+    color = [0.15 0.70 0.35];   % green
+  case 'IC_TFCE_Node_cpp'
     color = [0.15 0.70 0.35];   % green
   case 'Constrained_FWER'
     color = [0.95 0.55 0.40];   % light orange-red

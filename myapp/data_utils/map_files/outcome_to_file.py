@@ -1,10 +1,10 @@
 OUTCOME_TO_FILE = {
     # HCP tasks
-    "Emotion":        ["REST_EMOTION"],
-    "Gambling":       ["REST_GAMBLING"],
-    "Relational":     ["REST_RELATIONAL"],
-    "Social":         ["REST_SOCIAL"],
-    "Working Memory": ["REST_WM"],
+    "Emotion":        ["REST_EMOTION", "EMOTION"],
+    "Gambling":       ["REST_GAMBLING", "GAMBLING"],
+    "Relational":     ["REST_RELATIONAL", "RELATIONAL"],
+    "Social":         ["REST_SOCIAL", "SOCIAL"],
+    "Working Memory": ["REST_WM", "WM"],
     # ABCD demographics
     "Sex":        ["sex"],
     "WISC-V IQ":  ["wisc_v_iq"],

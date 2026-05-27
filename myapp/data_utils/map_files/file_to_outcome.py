@@ -5,6 +5,12 @@ FILE_TO_OUTCOME = {
     "REST_RELATIONAL": "Relational",
     "REST_SOCIAL":     "Social",
     "REST_WM":         "Working Memory",
+    # HCP Activation
+    "EMOTION":    "Emotion",
+    "GAMBLING":   "Gambling",
+    "RELATIONAL": "Relational",
+    "SOCIAL":     "Social",
+    "WM":         "Working Memory",
     # ABCD demographics
     "sex":             "Sex",
     "wisc_v_iq":       "WISC-V IQ",

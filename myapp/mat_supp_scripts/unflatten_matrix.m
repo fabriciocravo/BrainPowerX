@@ -1,16 +1,13 @@
-function result = unflatten_matrix(data, mask, varargin)
+function result = unflatten_matrix(data, mask, map_type)
 
-    p = inputParser;
-    addRequired(p, 'data');
-    addRequired(p, 'mask');
-    addParameter(p, 'variable_type', 'edge', @ischar);
-    parse(p, data, mask, varargin{:});
+    switch map_type
 
-    variable_type   = p.Results.variable_type;
+        case 'act'
+          volume = zeros(size(mask));
+          volume(mask) = data;
+          result = volume;
 
-    switch variable_type
-
-        case 'edge'    
+        case 'fc'
             % Called with data — return matrix directly
 
             fprintf('  [unflatten_matrix] data: %d elements | mask: %d x %d (%d true)\n', ...
@@ -20,7 +17,7 @@ function result = unflatten_matrix(data, mask, varargin)
         otherwise
             error('unflatten_matrix: variable_type ''%s'' not yet supported.', ...
                 variable_type);
-            
+
     end
 
 end
