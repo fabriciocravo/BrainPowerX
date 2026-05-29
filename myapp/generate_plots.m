@@ -39,7 +39,8 @@ fprintf('Started Generate Plot Scripts\n');
 % comment and uncomment for desired one
 % data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_fc"]; % HCP
 % data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/abcd_100_reps"]; % ABCD
-data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hpc_activation"] % HCP
+% data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hpc_activation"] % HCP
+data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hbn_fc"] % HBN
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -94,6 +95,11 @@ for file_idx = 1:length(power_mat_files)
         mask        = meta_data.rep_parameters.mask;
         edge_groups = meta_data.rep_parameters.edge_groups;
     end
+
+    % Skip some outcomes that did not have enough subjects - etc
+    if skip_outcome(dataset, task)
+      continue
+    endif
 
     % Task requires proper mapping due to dataset bad names
     task =  map_task_to_outcome(dataset, task)

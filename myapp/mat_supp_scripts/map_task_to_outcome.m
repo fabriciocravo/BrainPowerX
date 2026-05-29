@@ -1,5 +1,16 @@
 function outcome = map_task_to_outcome(dataset, task)
     switch dataset
+
+        case 'hbn'
+          switch task
+              case 'test2',  outcome = 'social_responsiveness';
+              case 'test3',  outcome = 'cognitive_flexibility';
+              case 'test4',  outcome = 'inhibitory_control';
+              case 'test5',  outcome = 'working_memory';
+              case 'test6',  outcome = 'processing_speed';
+              otherwise,     outcome = task;
+          end
+
         case 'abcd'
             switch task
                 % Category 1: Demographics & Basic Measures

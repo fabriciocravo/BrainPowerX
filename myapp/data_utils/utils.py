@@ -1,8 +1,7 @@
 import json
 from math import ceil
-from .map_files.file_to_outcome import FILE_TO_OUTCOME
 from .map_files.method_to_display_name import METHOD_DISPLAY_NAMES
-from .map_files.outcome_to_file import OUTCOME_TO_FILE
+from .map_files.outcome_to_file import OUTCOME_TO_FILE, FILE_TO_OUTCOME
 from .map_files.non_heatmap_method_names import NON_HEATMAP_METHODS
 from .map_files.method_aliases import METHOD_NAME_TO_ALIAS
 
