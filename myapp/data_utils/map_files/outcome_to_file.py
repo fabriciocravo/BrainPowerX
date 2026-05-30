@@ -3,8 +3,8 @@ OUTCOME_TO_FILE = {
     "Emotion":        {"REST_EMOTION", "EMOTION"},
     "Gambling":       {"REST_GAMBLING", "GAMBLING"},
     "Relational":     {"REST_RELATIONAL", "RELATIONAL"},
-    "Social":         {"REST_SOCIAL", "SOCIAL"},
-    "Working Memory": {"REST_WM", "WM"},
+    "Social":         {"REST_SOCIAL", "SOCIAL", "social_responsiveness"},
+    "Working Memory": {"REST_WM", "WM", "working_memory"},
     # ABCD demographics
     "Sex":         {"sex"},
     "WISC-V IQ":   {"wisc_v_iq"},
@@ -51,6 +51,10 @@ OUTCOME_TO_FILE = {
     "CBCL Somatic (Δ)":          {"cbcl_somatic_delta"},
     "CBCL Withdrawn (Δ)":        {"cbcl_withdrawn_delta"},
     "CBCL Anxious/Depressed (Δ)":{"cbcl_anx_dep_delta"},
+    # HBN cognitive (NIH Toolbox)
+    "Cognitive Flexibility": {"cognitive_flexibility"},
+    "Inhibitory Control":    {"inhibitory_control"},
+    "Processing Speed":      {"processing_speed"},
 }
 
 FILE_TO_OUTCOME = {
