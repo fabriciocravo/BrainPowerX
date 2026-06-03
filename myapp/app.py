@@ -121,8 +121,8 @@ app_ui = ui.page_fluid(
             ui.h5("Analysis Value (Desired Power or Sample Size)"),
             ui.input_text(
                 "analysis_value", None,
-                placeholder="e.g. 80",
-                value="80",
+                placeholder="e.g. 50",
+                value="50",
             ),
             class_="sidebar-panel",
         ),
@@ -171,7 +171,7 @@ def server(input, output, session):
             data_set_results = input_lookup(input.dataset())
         else:
             data_set_results = input_lookup(DATASETS)
-
+            
         if input.map_type():
             map_results = input_lookup(input.map_type())
         else:
