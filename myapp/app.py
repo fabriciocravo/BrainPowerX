@@ -61,7 +61,7 @@ app_ui = ui.page_fluid(
             ui.input_selectize(
                 "dataset", None,
                 choices=DATASETS,
-                selected=["HC"],
+                selected=["HCP"],
                 multiple=True,
                 options={"placeholder": "All datasets"},
             ),
@@ -171,7 +171,7 @@ def server(input, output, session):
             data_set_results = input_lookup(input.dataset())
         else:
             data_set_results = input_lookup(DATASETS)
-            
+
         if input.map_type():
             map_results = input_lookup(input.map_type())
         else:
