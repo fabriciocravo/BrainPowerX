@@ -17,7 +17,7 @@ OPTIONS = {
 
   "outcomes": list(OUTCOME_TO_FILE.keys()),
 
-  "test_types":[
+  "test_types": [
     "t",
     "t2",
     "r"
@@ -27,7 +27,7 @@ OPTIONS = {
     20, 40, 80, 120, 180, 200
   ],
 
-  "methods":[
+  "methods": [
     "Parametric FDR",
     "Parametric FWER",
     "Size",
@@ -37,9 +37,11 @@ OPTIONS = {
     "Omnibus cNBS"
   ],
 
-  # Important - Please remind the app choice is based around having 20, 50, 80 in here
-  # There are no conflicting cases, but in future expansions be careful when changing this
-  "curve_choices":[
+  # Important - Please remind the app choice is based around having 20, 50, 80
+  # in here
+  # There are no conflicting cases, but in future expansions be careful when
+  # changing this
+  "curve_choices": [
     "Average",
     "Proportion of variables  > 20",
     "Proportion of variables  > 50",

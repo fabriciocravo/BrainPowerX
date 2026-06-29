@@ -8,12 +8,12 @@ function skip = skip_outcome(dataset, outcome)
                 skip = true;
             else
                 skip = false;
-            endif
+            end
 
         otherwise
           skip = false;
 
-    endswitch
+    end
 
 end
 

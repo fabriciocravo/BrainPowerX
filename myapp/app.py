@@ -1,4 +1,3 @@
-import numpy as np
 from shiny import App, ui, render, reactive
 
 from data_utils.map_files.method_aliases import METHOD_ALIASES
