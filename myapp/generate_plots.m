@@ -99,10 +99,10 @@ for file_idx = 1:length(power_mat_files)
     % Skip some outcomes that did not have enough subjects - etc
     if skip_outcome(dataset, task)
       continue
-    endif
+    end
 
     % Task requires proper mapping due to dataset bad names
-    task =  map_task_to_outcome(dataset, task)
+    task =  map_task_to_outcome(dataset, task);
 
     grouping_key = make_valid_name( ...
       sprintf('%s_%s_%s_%s', dataset, map_type, task, test) ...
@@ -436,10 +436,10 @@ for key_idx = 1:length(grouping_keys)
 
             if numel(power_vec) == n_edges
                 % Edge case — direct unflatten
-                power_matrix = unflatten_matrix(
+                power_matrix = unflatten_matrix( ...
                     power_vec, ...
-                    grouped_data.mask,
-                    map_type
+                    grouped_data.mask, ...
+                    map_type ...
                     );
 
             elseif max(grouped_data.edge_groups(:)) == numel(power_vec)
@@ -447,7 +447,7 @@ for key_idx = 1:length(grouping_keys)
                 power_matrix = unflatten_network( ...
                     power_vec, ...
                     grouped_data.edge_groups, ...
-                    map_type
+                    map_type ...
                     );
 
             else

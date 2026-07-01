@@ -21,7 +21,6 @@ function result_data_subs_grouped = extract_power_data( ...
         n_subs      = meta_data.n_subs;
         mask        = meta_data.mask;
         edge_groups = meta_data.edge_groups;
-        n_variables = meta_data.rep_parameters.n_var;
     else
         % Old structure
         dataset     = meta_data.dataset;
@@ -32,6 +31,7 @@ function result_data_subs_grouped = extract_power_data( ...
         n_subs      = meta_data.subject_number;
         mask        = meta_data.rep_parameters.mask;
         edge_groups = meta_data.rep_parameters.edge_groups;
+        n_variables = meta_data.rep_parameters.n_var;
     end
 
     % Skip some outcomes that did not have enough subjects - etc
