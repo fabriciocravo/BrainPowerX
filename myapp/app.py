@@ -21,7 +21,7 @@ import json
 
 BASE_DIR = Path(__file__).parent
 
-DATASETS, MAP_TYPES, OUTCOMES, TEST_TYPES, SAMPLE_SIZES, METHODS, CURVE_CHOICE = (
+DATASETS, MAP_TYPES, OUTCOMES, TEST_TYPES, SAMPLE_SIZES, METHODS, QUANTILES = (
     utils.compile_options(OPTIONS)
 )
 
@@ -33,7 +33,6 @@ INDEX = utils.get_index(BASE_DIR / "results" / "data_base_index.json")
 
 app_ui = ui.page_fluid(
     ui.tags.head(ui.tags.style(_CSS)),
-
     # ── Full-width header above everything ────────────────────────────────────
     ui.div(
         ui.div(
@@ -46,19 +45,22 @@ app_ui = ui.page_fluid(
             class_="bpx-header-left",
         ),
         ui.div(
-            ui.tags.img(src="static/neuroprism_logo.png", style="height:42px; width:auto; opacity:0.7;"),
+            ui.tags.img(
+                src="static/neuroprism_logo.png",
+                style="height:42px; width:auto; opacity:0.7;",
+            ),
             ui.tags.span("The NeuroPrism Lab"),
             class_="bpx-lab-badge",
         ),
         class_="bpx-header",
     ),
-
     ui.div(
         # Sidebar panel
         ui.div(
             ui.h5("Dataset"),
             ui.input_selectize(
-                "dataset", None,
+                "dataset",
+                None,
                 choices=DATASETS,
                 selected=["HCP"],
                 multiple=True,
@@ -67,7 +69,8 @@ app_ui = ui.page_fluid(
             ui.hr(),
             ui.h5("Map Type"),
             ui.input_selectize(
-                "map_type", None,
+                "map_type",
+                None,
                 choices=MAP_TYPES,
                 selected=["FC"],
                 multiple=True,
@@ -76,14 +79,16 @@ app_ui = ui.page_fluid(
             ui.hr(),
             ui.h5("Outcomes"),
             ui.input_selectize(
-                "outcomes", None,
+                "outcomes",
+                None,
                 choices=OUTCOMES,
                 multiple=True,
                 options={"placeholder": "All outcomes"},
             ),
             ui.h5("Test Types"),
             ui.input_selectize(
-                "test_types", None,
+                "test_types",
+                None,
                 choices=TEST_TYPES,
                 multiple=True,
                 options={"placeholder": "All tests"},
@@ -91,37 +96,41 @@ app_ui = ui.page_fluid(
             ui.hr(),
             ui.h5("Methods"),
             ui.input_selectize(
-                "methods", None,
+                "methods",
+                None,
                 choices=METHODS,
                 multiple=False,
                 selected="Parametric FDR",
                 options={"placeholder": "All methods"},
             ),
             ui.hr(),
-            ui.h5("Curve Choice"),
-            ui.input_selectize(
-                "curve_choice", None,
-                choices=CURVE_CHOICE,
-                multiple=False,
-                selected="Average",
-                options={"placeholder": "Average"},
-            ),
-            ui.hr(),
             ui.h5("Desired Power or Sample Size"),
             ui.input_select(
-                "analysis_mode", None,
+                "analysis_mode",
+                None,
                 choices={
-                    "desired_power": "Desired power → Est. Subjects",
-                    "n_subjects": "Sample size → Est. Power",
+                    "desired_power": "Desired Power",
+                    "n_subjects": "Desired Sample Size",
                 },
                 selected="desired_power",
             ),
             ui.hr(),
-            ui.h5("Analysis Value (Desired Power or Sample Size)"),
+            ui.h5("Desired Value"),
             ui.input_text(
-                "analysis_value", None,
+                "analysis_value",
+                None,
                 placeholder="e.g. 50",
                 value="50",
+            ),
+            ui.hr(),
+            ui.h5("Brain Percentage"),
+            ui.input_selectize(
+                "quantile",
+                None,
+                choices=OPTIONS["quantiles"],
+                multiple=False,
+                selected="10%",
+                options={"placeholder": "10%"},
             ),
             class_="sidebar-panel",
         ),
@@ -187,7 +196,7 @@ def server(input, output, session):
         else:
             for outcome in OUTCOMES:
                 o_list = utils.outcome_map_names(outcome)
-                set_outcomes  |= input_lookup(o_list)
+                set_outcomes |= input_lookup(o_list)
 
         if input.test_types():
             set_test_types = input_lookup(input.test_types())
@@ -196,7 +205,9 @@ def server(input, output, session):
 
         results = data_set_results & map_results & set_outcomes & set_test_types
         # Sort according to correct dataset
-        DATASET_SORT_ORDER = {dataset: i for i, dataset in enumerate(["HCP", "UKB", "ABCD"])}
+        DATASET_SORT_ORDER = {
+            dataset: i for i, dataset in enumerate(["HCP", "UKB", "ABCD"])
+        }
 
         def dataset_sort_key(folder_name):
             for dataset, rank in DATASET_SORT_ORDER.items():
@@ -207,7 +218,7 @@ def server(input, output, session):
         results = sorted(list(results), key=dataset_sort_key)
 
         if not results:
-            results = INDEX["HCP"] # Return hcp plots as default
+            results = INDEX["HCP"]  # Return hcp plots as default
 
         return results
 
@@ -215,39 +226,31 @@ def server(input, output, session):
     @render.ui
     def main_panel():
         return ui.div(
-                    *[power_heatmap_card(f, BASE_DIR) for f in matched_folders()],
-                    style="width: 100%;",
-               )
+            *[power_heatmap_card(f, BASE_DIR) for f in matched_folders()],
+            style="width: 100%;",
+        )
 
     def register_card_outputs(folder_name: str):
 
-         # Calculate acording to user based input
+        # Calculate acording to user based input
         @reactive.Calc
         def card_analysis():
             metadata_path = BASE_DIR / "results" / f"{folder_name}" / "metadata.json"
             with open(metadata_path) as f:
                 metadata = json.load(f)
 
-            curve_choice = input.curve_choice()
-            if 'average' in curve_choice.lower():
-                type_of_curve = "power_curve_fits"
-            elif '20' in curve_choice:
-                type_of_curve = "p20"
-            elif '50' in curve_choice:
-                type_of_curve = "p50"
-            elif '80' in curve_choice:
-                type_of_curve = "p80"
-            else:
-                raise TypeError('Power image type not correctly recognized from options')
-
+            # Process inputs
             alias = input.methods()
+            quantile_key = utils.quantile_to_key(input.quantile())
             analysis_mode = input.analysis_mode()
             analysis_value = float(input.analysis_value())
 
             alias_list = METHOD_ALIASES[alias]
             method = utils.return_method_from_alias(alias_list, metadata["method_list"])
 
-            P, a, b = utils.get_result_value_from_meta_data(metadata, type_of_curve, method)
+            P, a, b = utils.get_result_value_from_meta_data(
+                metadata, quantile_key, method
+            )
 
             estimation = utils.find_estimation_of_desired_value(
                 analysis_value, analysis_mode, P, a, b
@@ -255,96 +258,106 @@ def server(input, output, session):
 
             return {
                 "metadata": metadata,
-                "type_of_curve": type_of_curve,
                 "method": method,
+                "quantile_key": quantile_key,
                 "P": P,
-                "a": a, 
+                "a": a,
                 "b": b,
                 "estimation": estimation,
                 "analysis_mode": analysis_mode,
                 "analysis_value": analysis_value,
             }
-        
+
         # Register the image output
         @output(id=f"{folder_name}_curve_img")
         @render.image
         def _():
             path_power_img = BASE_DIR / "results" / f"{folder_name}"
             c_data = card_analysis()
-            type_of_curve = c_data["type_of_curve"]
+            quantile_key = c_data["quantile_key"]
 
-            if type_of_curve == 'power_curve_fits':
-                path_power_img = path_power_img / 'average_power_curves.png'
-            elif type_of_curve == 'p20':
-                path_power_img = path_power_img / 'edges_above_threshold_20.png'
-            elif type_of_curve == 'p50':
-                path_power_img = path_power_img / 'edges_above_threshold_50.png'
-            elif type_of_curve == 'p80':
-                path_power_img = path_power_img / 'edges_above_threshold_80.png'
-            else:
-                raise TypeError('Power image type not correct recognized from options')
+            filename = f"power_curve_top_{quantile_key}.png"
+            path_power_img = path_power_img / filename
 
-            return  {"src": str(path_power_img), "alt": f"{folder_name}_curve_img"}
+            return {"src": str(path_power_img), "alt": f"{folder_name}_curve_img"}
 
         @output(id=f"{folder_name}_heatmap_img")
         @render.image
         def _():
             # Extract necessary data for heatmap
             c_data = card_analysis()
-            method = c_data['method']
-            sub_list = c_data['metadata']['sample_sizes']
-            analysis_mode = c_data['analysis_mode']
+            method = c_data["method"]
+            sub_list = c_data["metadata"]["sample_sizes"]
+            analysis_mode = c_data["analysis_mode"]
 
             if utils.non_heatmap_methods(method):
                 return None
 
-            if analysis_mode == 'n_subjects':
-                desired_subs = c_data['analysis_value']
-            elif analysis_mode == 'desired_power':
-                desired_subs = c_data['estimation']
+            if analysis_mode == "n_subjects":
+                desired_subs = c_data["analysis_value"]
+            elif analysis_mode == "desired_power":
+                desired_subs = c_data["estimation"]
             else:
-                raise ValueError('Analysis mode not supported')
+                raise ValueError("Analysis mode not supported")
 
             closest = min(sub_list, key=lambda n: (n - desired_subs) ** 2)
-            n_subs = 'n' + str(closest)
+            n_subs = "n" + str(closest)
 
-            heatmap_img_path = BASE_DIR / "results" / folder_name / f"heatmap_{method}_{n_subs}.png"
+            heatmap_img_path = (
+                BASE_DIR / "results" / folder_name / f"heatmap_{method}_{n_subs}.png"
+            )
             return {"src": str(heatmap_img_path), "alt": f"{folder_name}_heatmap_img"}
 
         @output(id=f"{folder_name}_calculation_text")
         @render.text
         def _():
+
             # Get necessary data from card
             c_data = card_analysis()
-            type_of_curve = c_data['type_of_curve']
-            method = c_data['method']
-            sub_list = c_data['metadata']['sample_sizes']
-            metric = "power" if type_of_curve == "power_curve_fits" else "proportion"
-            P, a, b = c_data['P'], c_data['a'], c_data['b']
-            estimation = c_data['estimation']
-            analysis_value = c_data['analysis_value']
-            analysis_mode = c_data['analysis_mode']
+            method = c_data["method"]
+            quantile_key = c_data["quantile_key"]
+            sub_list = c_data["metadata"]["sample_sizes"]
+            P, a, b = c_data["P"], c_data["a"], c_data["b"]
+            estimation = c_data["estimation"]
+            analysis_value = c_data["analysis_value"]
+            analysis_mode = c_data["analysis_mode"]
 
-            if utils.non_heatmap_methods(method) and type_of_curve != "power_curve_fits":
-                return f"For method {method},\n the {metric} does not apply"
-
-            fit_line = (f"Fit for {method}:"
-                        f"\n {metric.capitalize()}(n) = {P:.3f}/(1+({a:.3f}/n)^{b:.3f})")
+            fit_line = (
+                f"Fit for {method} at brain percentage {quantile_key.upper()}:"
+                f"\n Power(n) = {P:.3f}/(1+({a:.3f}/n)^{b:.3f})"
+            )
 
             if analysis_mode == "n_subjects":
-                warning = f"\n Below minimum estimated N ({sub_list[0]})" if analysis_value < sub_list[0] else ""
-                result_line = f"For {int(analysis_value)} subjects:\n Estimated {metric} = {estimation:.3f}{warning}"
+                warning = (
+                    f"\n Below minimum estimated N ({sub_list[0]})"
+                    if analysis_value < sub_list[0]
+                    else ""
+                )
+                result_line = (
+                    f"For {int(analysis_value)} subjects:\n"
+                    f"Estimated power = {estimation:.3f}{warning}"
+                )
+            
             else:
                 if estimation <= 0:
-                    result_line = f"For desired {metric} of {analysis_value:.2f}:\n no solution (check parameters)"
+
+                    result_line = (
+                        f"For desired power of {analysis_value:.2f}:\n"
+                        " no solution (check parameters)"
+                    )
+        
                 else:
-                    warning = f"\n Below minimum estimated N ({sub_list[0]})" \
-                    if estimation < sub_list[0] else ""
-                    result_line = f"For desired {metric} of {analysis_value:.2f}:\n \
+
+                    warning = (
+                        f"\n Below minimum estimated N ({sub_list[0]})"
+                        if estimation < sub_list[0]
+                        else ""
+                    )
+
+                    result_line = f"For desired power of {analysis_value:.2f}:\n \
                     ~{int(estimation)} subjects required{warning}"
 
             return f"{result_line}\n{fit_line}"
-
 
     @reactive.effect
     def _register_outputs():
@@ -354,7 +367,5 @@ def server(input, output, session):
 
 app = App(app_ui, server, static_assets={"/static": BASE_DIR / "static"})
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     pass
-

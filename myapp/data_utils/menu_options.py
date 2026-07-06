@@ -41,11 +41,14 @@ OPTIONS = {
   # in here
   # There are no conflicting cases, but in future expansions be careful when
   # changing this
-  "curve_choices": [
-    "Average",
-    "Proportion of variables  > 20",
-    "Proportion of variables  > 50",
-    "Proportion of variables  > 80"
+  "quantiles": [
+    "10%",
+    "20%",
+    "30%",
+    "40%",
+    "50%",
+    "75%",
+    "100%"
   ]
 
 }

@@ -70,7 +70,7 @@ result_data_subs_grouped = extract_power_data( ...
 );
 
 % Define quantilies to calculate top average power
-QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 1];
+QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1];
 
 
 %%% Json index definition

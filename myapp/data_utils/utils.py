@@ -5,6 +5,7 @@ from .map_files.outcome_to_file import OUTCOME_TO_FILE, FILE_TO_OUTCOME
 from .map_files.non_heatmap_method_names import NON_HEATMAP_METHODS
 from .map_files.method_aliases import METHOD_NAME_TO_ALIAS
 
+
 def compile_options(options_dict):
 
     DATASETS = options_dict["datasets"]
@@ -13,9 +14,10 @@ def compile_options(options_dict):
     TEST_TYPES = options_dict["test_types"]
     SAMPLE_SIZES = options_dict["sample_sizes"]
     METHODS = options_dict["methods"]
-    CURVE_CHOICE = options_dict["curve_choices"]
+    QUANTILES = options_dict["quantiles"]
 
-    return DATASETS, MAP_TYPES, OUTCOMES, TEST_TYPES, SAMPLE_SIZES, METHODS, CURVE_CHOICE
+    return DATASETS, MAP_TYPES, OUTCOMES, TEST_TYPES, \
+        SAMPLE_SIZES, METHODS, QUANTILES
 
 
 def get_index(json_path):
@@ -70,22 +72,28 @@ def return_method_from_alias(alias_list, meta_data_method_list):
     else:
         raise ValueError("Method Not Found in Meta Data")
 
+
 # This could be changed for an interpolation if more datapoints are added
 def get_result_value_from_meta_data(
         metadata: dict,
-        type_of_curve: str,
+        quantile_key: str,
         method: iter,
-    ) -> tuple:
+) -> tuple:
 
     # Meta data is clearly a dictionary - not a hashable
-    P = metadata[type_of_curve][method]["P"]
-    a = metadata[type_of_curve][method]["a"]
-    b = metadata[type_of_curve][method]["b"]
+    P = metadata["power_fit_" + quantile_key][method]["P"]
+    a = metadata["power_fit_" + quantile_key][method]["a"]
+    b = metadata["power_fit_" + quantile_key][method]["b"]
 
     return P, a, b
 
 
-def get_subject_number_from_desired_power(R: float, P: float, a: float, b: float) -> int:
+def get_subject_number_from_desired_power(
+        R: float,
+        P: float,
+        a: float,
+        b: float
+) -> int:
 
     base = P/R - 1
     if base < 0:
@@ -100,19 +108,24 @@ def get_subject_number_from_desired_power(R: float, P: float, a: float, b: float
         return -1
 
 
-def get_power_from_desired_subjects(n: float, P: float, a: float, b: float) -> int:
+def get_power_from_desired_subjects(
+        n: float,
+        P: float,
+        a: float,
+        b: float
+) -> int:
 
     deno = 1 + (a/n)**b
     return P/deno
 
 
 def find_estimation_of_desired_value(
-        user_value: float, 
-        analysis_type: str, 
+        user_value: float,
+        analysis_type: str,
         P: float,
         a: float,
         b: float,
-    ) -> float:
+) -> float:
 
     if analysis_type == 'desired_power':
         estimation = get_subject_number_from_desired_power(user_value, P, a, b)
@@ -120,10 +133,10 @@ def find_estimation_of_desired_value(
         estimation = get_power_from_desired_subjects(user_value, P, a, b)
     else:
         raise ValueError('Analysis type not supported')
-    
+
     return estimation
 
 
-def find_closest_n_sub_to_estimation():
-    pass
-
+def quantile_to_key(quantile_str: str) -> str:
+    """Convert '10%' -> 'q10', '100%' -> 'q100'."""
+    return "q" + quantile_str.rstrip("%")
