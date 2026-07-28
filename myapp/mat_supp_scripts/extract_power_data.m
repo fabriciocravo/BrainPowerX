@@ -21,6 +21,8 @@ function result_data_subs_grouped = extract_power_data( ...
         n_subs      = meta_data.n_subs;
         mask        = meta_data.mask;
         edge_groups = meta_data.edge_groups;
+        n_variables = sum(mask(:)); % I removed the variables here ....
+        n_reps      = meta_data.n_repetitions;
     else
         % Old structure
         dataset     = meta_data.dataset;
@@ -32,15 +34,13 @@ function result_data_subs_grouped = extract_power_data( ...
         mask        = meta_data.rep_parameters.mask;
         edge_groups = meta_data.rep_parameters.edge_groups;
         n_variables = meta_data.rep_parameters.n_var;
+        n_reps      = meta_data.rep_parameters.n_repetitions;
     end
 
     % Skip some outcomes that did not have enough subjects - etc
     if skip_outcome(dataset, task)
       continue
     end
-
-    % Task requires proper mapping due to dataset bad names
-    task = map_task_to_outcome(dataset, task);
 
     grouping_key = make_valid_name( ...
       sprintf('%s_%s_%s_%s', dataset, map_type, task, test) ...
@@ -55,6 +55,7 @@ function result_data_subs_grouped = extract_power_data( ...
         result_data_subs_grouped.(grouping_key).task        = task;
         result_data_subs_grouped.(grouping_key).test        = test;
         result_data_subs_grouped.(grouping_key).n_variables = n_variables;
+        result_data_subs_grouped.(grouping_key).n_reps      = n_reps;
     end
 
     % ── Extract power for each method ─────────────────────────────────────

@@ -7,6 +7,8 @@ from .fcp_functions import (
     CI_calculation,
 )
 
+# β = 0.99987, so α ≈ 0.00013 (about 1.3×10⁻⁴).
+
 # Parameters to calculate coverage for
 p_group_list = [(0.95, 0.05)]
 multi_corrected = True

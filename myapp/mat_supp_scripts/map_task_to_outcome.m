@@ -61,6 +61,13 @@ function outcome = map_task_to_outcome(dataset, task)
                 case 'test40', outcome = 'cbcl_anx_dep_delta';
                 otherwise,     outcome = task;
             end
+
+        case 'slim'
+            
+            switch task
+                case 'test1',  outcome = 'state_anxiety';
+                case 'test2',  outcome = 'sex';
+            end
         otherwise
             outcome = task;
     end

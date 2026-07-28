@@ -1,3 +1,4 @@
 myapp/data/*
 *.asv
 myapp/results/*
+**/__pycache__/
