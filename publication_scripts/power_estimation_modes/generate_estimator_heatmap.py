@@ -88,7 +88,6 @@ def plot_curve_and_heatmap(
     sample_sizes,
     k_values,
     n_curve=40,
-    title="",
     figsize=(12, 5),
 ):
     # Create figure and subplots
@@ -109,24 +108,34 @@ def plot_curve_and_heatmap(
     ax_curve.set_ylim(0, 1)
     ax_curve.set_title(f"N = {n_curve}")
 
-    vmax = np.max(np.abs(diff_mean))
+    true_power = results_mean - diff_mean
 
-    trans = Affine2D().rotate_deg(45) + ax_heat.transData
+    ax_curve.axhline(
+        true_power[n_idx, 0],
+        linestyle="--",
+        color="k"
+    )
+
+    vmax = np.max(np.abs(diff_mean))
 
     im = ax_heat.imshow(
         diff_mean,
         cmap="RdBu_r",
         vmin=-vmax,
         vmax=vmax,
-        transform=trans,
+        interpolation="nearest",
+        aspect="auto",
     )
 
     n_rows, n_cols = diff_mean.shape
-    r = np.hypot(n_rows, n_cols)
-    ax_heat.set_xlim(-r, r)
-    ax_heat.set_ylim(-r, r)
-    ax_heat.set_aspect("equal")
-    ax_heat.axis("off")
+
+    ax_heat.set_xticks(range(len(k_values)))
+    ax_heat.set_xticklabels(k_values)
+    ax_heat.set_yticks(range(len(sample_sizes)))
+    ax_heat.set_yticklabels(sample_sizes)
+    ax_heat.set_xlabel("K")
+    ax_heat.set_ylabel("N")
+    ax_heat.set_title("Estimated − True power")
 
     for i in range(n_rows):
         for j in range(n_cols):
@@ -137,7 +146,6 @@ def plot_curve_and_heatmap(
                 ha="center",
                 va="center",
                 fontsize=8,
-                transform=trans,
             )
 
     plt.colorbar(im, ax=ax_heat, label="Estimated − True power")
@@ -150,9 +158,9 @@ def plot_curve_and_heatmap(
 if __name__ == "__main__":
 
     SEED = 20260724
-    N_NODES = 55
+    N_NODES = 30
     N_VARIABLES = N_NODES * (N_NODES - 1) // 2
-    TAU_A = 1.0
+    TAU_A = 0.00088
     TAU_S = 1.0
     TAU_MU = 0
 
@@ -191,7 +199,6 @@ if __name__ == "__main__":
         SAMPLE_SIZES,
         K_VALUES,
         n_curve=40,
-        title=ESTIMATOR.__name__,
     )
     # fig.savefig(f"curve_and_heatmap_{ESTIMATOR.__name__}.png", dpi=200)
     plt.show()
