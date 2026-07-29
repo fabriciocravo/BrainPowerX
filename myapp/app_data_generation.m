@@ -32,6 +32,8 @@ clear; clc;
 
 fprintf('Started Generate Plot Scripts\n');
 
+% TODO - REDO ACTIVATION IMAGES
+
 % ─────────────────────────────────────────────
 %  CONFIG
 % ─────────────────────────────────────────────
@@ -41,7 +43,7 @@ fprintf('Started Generate Plot Scripts\n');
 % data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/abcd_100_reps"]; % ABCD
 % data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hcp_activation"]; % HCP
 % data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/hbn_fc"]; % HBN
-data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/slim_fc/power_calculation"]; % SLIM
+% data_folder = ["/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/slim_fc/power_calculation"]; % SLIM
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,6 +79,7 @@ QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1];
 %%% Json index definition
 %%% It's supposed to help searching the specific files
 %%% Search terms contain the names of their respective folders
+%%% The maps for test numbers to outcomes are here
 grouping_keys = fieldnames(result_data_subs_grouped);
 
 for key_idx = 1:length(grouping_keys)
@@ -88,12 +91,6 @@ for key_idx = 1:length(grouping_keys)
         key_idx, ...
         length(grouping_keys), ...
         grouping_key ...
-    );
-
-    % Map task to name of outcome
-    grouped_data.task = map_task_to_outcome( ...
-        grouped_data.dataset, ...
-        grouped_data.task ...
     );
 
     % Get the average power structure
