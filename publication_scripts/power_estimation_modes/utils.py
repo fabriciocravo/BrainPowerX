@@ -32,10 +32,13 @@ def calculate_power_fwer(
     t_crit = stats.t.ppf(1 - alpha/(2*n_variables), N-1)
     nc = np.sqrt(N) * e_mat
 
-    # Two-sided power: significant in either tail of the noncentral t
-    pow_mat = stats.nct.sf(t_crit, N-1, nc) + stats.nct.cdf(-t_crit, N-1, nc)
+    # Primary tail (Survival function)
+    pow_upper = np.nan_to_num(stats.nct.sf(t_crit, N - 1, nc), nan=0.0)
 
-    return pow_mat
+    # Opposite tail (CDF) - fill numerical precision NaNs with 0.0
+    pow_lower = np.nan_to_num(stats.nct.cdf(-t_crit, N - 1, nc), nan=0.0)
+
+    return pow_upper + pow_lower
 
 
 # Random number global

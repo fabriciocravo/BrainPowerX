@@ -11,8 +11,7 @@ from power_estimation_modes.study_planning_strats import (
 
 from power_estimation_modes.effect_model import (
     draw_true_effects,
-    draw_subject_array,
-    stack_subject_arrays
+    draw_subject_array
 )
 
 # Set seed for effect model and draw true effects
@@ -23,7 +22,7 @@ N_NODES = 55
 N_VARIABLES = N_NODES*(N_NODES - 1)//2  # Not really a constant but fine
 TAU_A = 1.0
 TAU_S = 1.0
-TAU_MU = 0.1
+TAU_MU = 0
 
 # Sample size - 40 subjects - idea scale
 SAMPLE_SIZE = 40

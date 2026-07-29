@@ -37,12 +37,13 @@ def estimate_power_strongest_effect(
     max_effect = stacked_effects.max()
 
     # Calculate power of that maximum effect
-    return calculate_power_fwer(
+    power = calculate_power_fwer(
         max_effect,
         n_variables,
         sample_size
     )
 
+    return power
 
 def estimate_power_smallest_significant_effect(
         stacked_subject_array,
@@ -95,7 +96,7 @@ def estimate_power_average_significant_effect(
 
         # For each draw, find the average significant effect
         if r.any():
-            avg_sig.append(e[r].mean())
+            avg_sig.append(np.abs(e[r]).mean())
 
     if not avg_sig:
         raise ValueError(
@@ -103,15 +104,17 @@ def estimate_power_average_significant_effect(
             'significant effect did not return anything'
         )
 
-    # Over K draws, average the per-draw average significant effect
-    mean_sig = np.mean(avg_sig)
+    # Over K draws, get the maximum over the means.
+    mean_sig = np.max(avg_sig)
 
     # Calculate power based on the average significant effect
-    return calculate_power_fwer(
+    power = calculate_power_fwer(
         mean_sig,
         n_variables,
         sample_size
     )
+
+    return power
 
 
 def estimate_power_average_effect(
@@ -125,7 +128,7 @@ def estimate_power_average_effect(
 
     # For each heatmap - calculate average power
     avg_power = np.array([
-        calculate_power_fwer(e, n_variables, sample_size).mean()
+        calculate_power_fwer(np.abs(e).mean(), n_variables, sample_size)
         for e in stacked_effects
     ])
 
@@ -145,10 +148,7 @@ def estimate_power_subsampling_repetition(
     if rng_np is None:
         rng_np = np.random.default_rng()
 
-    pooled_subjects = stack_subject_arrays(stacked_subject_array)
-
-    print(pooled_subjects.shape)
-    exit()
+    pooled_subjects = stack_subject_arrays(stacked_subject_array[:exp_number])
 
     # Get total dataset size
     data_set_size = pooled_subjects.shape[0]
@@ -161,8 +161,8 @@ def estimate_power_subsampling_repetition(
     # Each map is a subsampled experiment
     # For each n_rep chose a map at random
     for _ in range(n_rep):
-
-        exp = stacked_subject_array[
+  
+        exp = pooled_subjects[
             rng_np.integers(data_set_size, size=sample_size)
         ]
 
@@ -177,11 +177,13 @@ def estimate_power_subsampling_repetition(
 
         p_matrix += sig
 
+
     # Calculate proportion of detection per edges
     p_matrix = p_matrix/n_rep
 
     # Average results for average power and return
     avg_power = np.mean(p_matrix)
+
     return avg_power
 
 
