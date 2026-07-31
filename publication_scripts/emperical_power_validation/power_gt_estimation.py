@@ -1,144 +1,100 @@
 """
-Connected-scatter comparison of subsampled (empirical) vs analytic
-ground-truth power curves, one line pair per study/task.
+Analytic (closed-form) power estimation from full-dataset t-statistics.
+
+For each ground-truth .mat file, rescale the reference t-stats to a target
+sample size, compute per-edge power under a Bonferroni-corrected one-sided
+t-test taken in the direction of the ground-truth sign, and average power
+within the top-X% of edges ranked by |effect|.
 """
 
 import os
 import glob
 import json
-import colorsys
 
 import numpy as np
+from scipy import stats
 from scipy.io import loadmat
-import matplotlib.pyplot as plt
 
-# Variable to set quantily percentage
-# Either 10, 30, 50 or 100
-QUANTILE = 100
-
-# Power directory ./power_data/
-POWER_DIR = "./power_data/"
-GT_JSON = "./gt_power.json"
-
-# Function to create lighter color for plot
-def lighten_color(color, amount=0.6):
-    """Blend an RGB(A) color toward white by `amount` (0=no change, 1=white)."""
-    r, g, b = color[:3]
-    h, l, s = colorsys.rgb_to_hls(r, g, b)
-    l = l + (1 - l) * amount
-    return colorsys.hls_to_rgb(h, l, s)
+# ---------------------------------------------------------------- settings ---
+GT_DIR = "./gt_data/"
+OUT_JSON = "./gt_power.json"
+SAMPLE_SIZES = [20, 40, 80, 120, 200]
+Q_PERCENTAGES = [10, 30, 50, 100]
+ALPHA = 0.05
 
 
-# Open gt_power.json - gt_json
-with open(GT_JSON, "r") as f:
-    gt_json = json.load(f)
-
-
-# Define function receives meta-data returns study key
-def get_study_key(meta_data):
-    # Key pattern
-    # meta_data.output-meta_data.study_name-meta_data.test_type
-    output = str(np.asarray(meta_data.output).ravel()[0])
-    study_name = str(np.asarray(meta_data.study_name).ravel()[0])
-    test_type = str(np.asarray(meta_data.test_type).ravel()[0])
-    return f"{output}-{study_name}-{test_type}"
-
-
-# Create empty power dicionary
-power_dict = {}
-
-# Glob all files from directory
-mat_files = sorted(glob.glob(os.path.join(POWER_DIR, "*.mat")))
-
-# For each file in power data
-for path in mat_files:
+def load_mat_fields(path):
+    """Pull edge_level_stats and meta_data.n_subs out of a .mat file."""
     mat = loadmat(path, squeeze_me=True, struct_as_record=False)
-    meta_data = mat["meta_data"]
-
-    # Retrieve key name from meta_data
-    key = get_study_key(meta_data)
-
-    # Get subject number from meta_data.n_subs
-    n_subs = int(np.asarray(meta_data.n_subs).ravel()[0])
-
-    power_dict.setdefault(key, {"subs": set()})
-
-    # Assign to set of possible subs
-    power_dict[key]["subs"].add(n_subs)
-
-    # Get power data vector from Parametric_FWER.tpr
-    tpr = np.asarray(mat["Parametric_FWER"].tpr, dtype=float).ravel()
-
-    # Calculate average power according to selected quantile
-    # (edges ranked by |effect size|, same convention as the ground-truth
-    # script, so the top-QUANTILE% slice lines up with gt_power.json)
-    edge_stats = np.asarray(mat["edge_level_stats"], dtype=float).ravel()
-    order = np.argsort(np.abs(edge_stats))[::-1]
-    m = tpr.size
-    k = max(1, int(round(m * QUANTILE / 100.0)))
-    slice_idx = order[:k]
-    avg_power = float(np.mean(tpr[slice_idx]) * 100)
-
-    # Power dict: Store results in key name (y) and sub number (n)
-    power_dict[key]["n" + str(n_subs)] = avg_power
+    # Ravel converts from (n, 1) and (1, n) to (n,)
+    t_ref = np.asarray(mat["edge_level_stats"], dtype=float).ravel()
+    meta = mat["meta_data"]
+    n_ref = int(np.asarray(meta.n_subs).ravel()[0])
+    return t_ref, n_ref
 
 
-# Color per task, light version for gt, dark version for est
-cmap = plt.get_cmap("tab10")
-task_colors = {}
+def power_at_n(t_ref, n_ref, n, alpha=ALPHA):
+    """Per-edge power at sample size n, Bonferroni-corrected over all edges.
 
-fig, ax = plt.subplots(figsize=(7, 5))
+    One-sided test taken in the direction of the ground-truth sign. Because
+    nct.sf(c, df, d) == nct.cdf(-c, df, -d), the signed test on a negative
+    effect has the same power as the positive-direction test on |delta|.
+    """
+    m = t_ref.size
+    df = n - 1
+    delta = np.abs(t_ref) * np.sqrt(n / n_ref)   
+    t_crit = stats.t.isf(alpha / m, df)          # Bonferroni
+    return stats.nct.sf(t_crit, df, delta)
 
-# For each key in gt_json
-for i, gt_key in enumerate(gt_json):
 
-    # Remove -Ground_Truth from ending
-    # ex: hpc_fc_gt-REST_EMOTION-t-Ground_Truth
-    key = gt_key.replace("-Ground_Truth", "")
+# Get all mat files names in ./gt_data/
+# Each file is a .mat file
+mat_files = sorted(glob.glob(os.path.join(GT_DIR, "*.mat")))
 
-    if key not in power_dict:
-        continue
+# create empty results dictionary
+results = {}
 
-    task_colors[key] = cmap(i % 10)
-    dark = task_colors[key]
-    light = lighten_color(dark, amount=0.6)
+# for each file in ./gt_data/
+for path in mat_files:
+    file_key = os.path.splitext(os.path.basename(path))[0]
 
-    # Create two lists - gt and subsampled
-    ns, gt_vals, sub_vals = [], [], []
+    # edge_level_stats contains the t-stats
+    # meta_data.n_subs contains the number os subjects
+    t_ref, n_ref = load_mat_fields(path)
 
-    # For each element in the set of possible subs
-    for n_subs in sorted(power_dict[key]["subs"]):
-        n_key = "n" + str(n_subs)
-        q_key = "q" + str(QUANTILE)
+    # rank edges once by dataset effect ranking is N-invariant because
+    # the sqrt(N) rescaling is a monotone transform applied to every edge
+    order = np.argsort(np.abs(t_ref))[::-1]
+    m = t_ref.size
 
-        if n_key not in gt_json[gt_key] or q_key not in gt_json[gt_key][n_key]:
-            continue
-        if n_key not in power_dict[key]:
-            continue
+    results[file_key] = {}
 
-        # Get power value
-        # gt_json[key]['n'+subnume]['q'+quantile]
-        gt_power = gt_json[gt_key][n_key][q_key]
+    # recale t-stat to sample sizes - (delta = t_ref * sqrt(N / N_ref))
+    # for each sample size
+    for n in SAMPLE_SIZES:
 
-        # Get respective result from power dict
-        est_power = power_dict[key][n_key]
+        # estimate power of all effects
+        power = power_at_n(t_ref, n_ref, n)
 
-        ns.append(n_subs)
-        gt_vals.append(gt_power)
-        sub_vals.append(est_power)
+        results[file_key]['n'+str(n)] = {}
 
-    if not ns:
-        continue
+        # calculate the average powers
+        # for the top10%, top30%, top50%, 100%
+        for q in Q_PERCENTAGES:
+            k = max(1, int(round(m * q / 100.0)))
+            slice_idx = order[:k]
 
-    # plot curve
-    ax.plot(ns, gt_vals, marker="o", linestyle="--", color=light)
-    ax.plot(ns, sub_vals, marker="o", linestyle="-", color=dark, label=key)
+            # store in results dictonary
+            # first key is file name (no ext)
+            # second key is sample size
+            # third key is percentaly qPercentage
+            mean_p = float(np.mean(power[slice_idx])*100)
+            results[file_key]['n'+str(n)]['q'+str(q)] = mean_p
 
-# Legend = task name
-ax.set_xlabel("Sample size (N)")
-ax.set_ylabel(f"Top-{QUANTILE}% average power (%)")
-ax.legend(title="Task (solid=empirical, dashed=analytic)", fontsize=8)
-fig.tight_layout()
+# Save results to json file
+with open(OUT_JSON, "w") as f:
+    json.dump(results, f, indent=2)
 
-# Show plot, not save
-plt.show()
+print(f"Wrote {OUT_JSON}: {len(results)} files x {len(SAMPLE_SIZES)} sample sizes")
+
+
