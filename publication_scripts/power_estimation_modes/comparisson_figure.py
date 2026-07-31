@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from power_estimation_modes.study_planning_strats import (
+from study_planning_strats import (
     estimate_power_strongest_effect,
     estimate_power_average_significant_effect,
     estimate_power_average_effect,
@@ -9,7 +9,7 @@ from power_estimation_modes.study_planning_strats import (
     estimate_true_power
 )
 
-from power_estimation_modes.effect_model import (
+from effect_model import (
     draw_true_effects,
     draw_subject_array
 )

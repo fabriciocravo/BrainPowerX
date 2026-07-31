@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-from .effect_model import (
+from effect_model import (
     group_level_effect,
     stack_subject_arrays
 ) 
 
-from .utils import (
+from utils import (
     edges_to_pvalues,
     significance_map,
     calculate_power_fwer
