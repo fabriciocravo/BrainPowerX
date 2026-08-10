@@ -9,6 +9,7 @@ from effect_model import (
 
 from utils import (
     edges_to_pvalues,
+    p_values_true_effects,
     significance_map,
     calculate_power_fwer
 )
@@ -38,6 +39,8 @@ def p_est_strongest_effect(
         sample_size
     )
 
+    print(sample_size, max_effect, power)
+
     return power
 
 
@@ -47,13 +50,15 @@ def tp_strongest_effect(
         sample_size
 ):
     # Getting max true effect
-    max_effect = TE.max()
+    max_effect = np.abs(TE).max()
+
     # Calculate power of that maximum effect
     power = calculate_power_fwer(
         max_effect,
         n_variables,
         sample_size
     )
+
     return power
 
 
@@ -134,7 +139,17 @@ def tp_average_significant_effect(
         n_variables,
         sample_size
 ):
-    pass
+
+    p_vals = p_values_true_effects(TE, sample_size)
+    sig_map = significance_map(p_vals, n_variables)
+
+    effects = TE[sig_map]
+
+    if effects.size == 0:
+        return 0
+
+    powers = calculate_power_fwer(effects, n_variables, sample_size)
+    return powers.mean()
 
 
 def p_est_average_effect(

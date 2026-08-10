@@ -9,7 +9,7 @@ def draw_true_effects(n_variables, tau_A=1.0, tau_S=1.0, rng_np=None):
 
     # Draws overall effects
     TE = rng_np.normal(
-        loc=0, 
+        loc=0,
         scale=np.sqrt(tau_A),
         size=n_variables
     )/np.sqrt(tau_S)  # Scaling to units of noise

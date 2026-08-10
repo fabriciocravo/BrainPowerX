@@ -18,6 +18,15 @@ def edges_to_pvalues(exp, N):
     return p_mat
 
 
+def p_values_true_effects(TE, N):
+
+    # Convert true effects to true t-stat
+    t_mat = np.sqrt(N)*TE
+
+    p_mat = 2 * stats.t.sf(np.abs(t_mat), df=N-1)
+    return p_mat
+
+
 def significance_map(p_mat, n_variables, alpha=0.05):
 
     if n_variables != p_mat.size:

@@ -5,11 +5,13 @@ from matplotlib.transforms import Affine2D
 
 
 from study_planning_strats import (
-    estimate_power_strongest_effect,
-    estimate_power_smallest_significant_effect,
-    estimate_power_average_significant_effect,
-    estimate_power_average_effect,
-    estimate_power_subsampling_repetition,
+    p_est_strongest_effect,
+    p_est_smallest_significant_effect,
+    p_est_average_significant_effect,
+    p_est_average_effect,
+    p_est_subsampling_repetition,
+    tp_strongest_effect,
+    tp_average_significant_effect,
     estimate_true_power
 )
 
@@ -23,6 +25,7 @@ from effect_model import (
 
 def generate_estimator_comp_figure(
         estimator,
+        true_power_estimator,
         n_variables,
         tau_A,
         tau_S,
@@ -47,11 +50,12 @@ def generate_estimator_comp_figure(
         TE = draw_true_effects(
             n_variables=n_variables,
             tau_A=tau_A,
+            tau_S=tau_S,
             rng_np=rng_np
         )
 
         # Deterministic given TE and n_sample -> compute once
-        true_power[i_s] = estimate_true_power(
+        true_power[i_s] = true_power_estimator(
             TE,
             n_variables,
             n_sample
@@ -61,7 +65,6 @@ def generate_estimator_comp_figure(
             return draw_subject_array(
                 TE=TE,
                 n_subs=n_sample,
-                tau_S=tau_S,
                 tau_mu=tau_M,
                 rng_np=rng_np
             )
@@ -166,10 +169,19 @@ if __name__ == "__main__":
     TAU_MU = 0
 
     N_REPS = 10
-    SAMPLE_SIZES = (10, 20, 40, 80, 120)
-    K_VALUES = (5, 10, 20, 40, 100)
+    SAMPLE_SIZES = [10, 20, 40, 80, 120]
+    # K_VALUES = (5, 10, 20, 40, 100)
+    K_VALUES = [3]
 
-    ESTIMATOR = estimate_power_average_effect
+    ESTIMATOR = p_est_average_significant_effect
+
+    ESTIMATOR_TO_TRUE_POWER = {
+        p_est_strongest_effect: tp_strongest_effect,
+        p_est_average_significant_effect: tp_average_significant_effect,
+        p_est_average_effect: estimate_true_power,
+        p_est_subsampling_repetition: estimate_true_power,
+    }
+    ESTIMATOR_TP = ESTIMATOR_TO_TRUE_POWER[ESTIMATOR]
 
     results_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
@@ -180,6 +192,7 @@ if __name__ == "__main__":
 
         results, results_diff = generate_estimator_comp_figure(
             estimator=ESTIMATOR,
+            true_power_estimator=ESTIMATOR_TP,
             n_variables=N_VARIABLES,
             tau_A=TAU_A,
             tau_S=TAU_S,
