@@ -2,9 +2,18 @@ import numpy as np
 from scipy import stats
 
 
-def edges_to_pvalues(e_mat, N):
+def edges_to_pvalues(exp, N):
+    assert exp.shape[0] == N, (
+        f"Expected {N} subjects, got {exp.shape[0]}"
+    )
 
-    t_stat = np.sqrt(N) * e_mat
+    mean = exp.mean(axis=0)
+    sd = exp.std(axis=0, ddof=1)
+    # Although normalized sd still needs to be estimated
+    t_stat = np.sqrt(N) * mean / sd
+
+    # Sf - survival function P(T > t_stat)
+    # Probability that null generates higher stat
     p_mat = 2 * stats.t.sf(np.abs(t_stat), df=N-1)
     return p_mat
 

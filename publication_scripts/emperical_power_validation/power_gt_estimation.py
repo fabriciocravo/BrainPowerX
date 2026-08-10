@@ -32,7 +32,7 @@ def load_mat_fields(path):
     n_ref = int(np.asarray(meta.n_subs).ravel()[0])
     return t_ref, n_ref
 
-
+    
 def power_at_n(t_ref, n_ref, n, alpha=ALPHA):
     """Per-edge power at sample size n, Bonferroni-corrected over all edges.
 

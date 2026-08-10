@@ -1,19 +1,23 @@
 import numpy as np
 
 
-def draw_true_effects(n_variables, tau_A=1.0, rng_np=None):
+def draw_true_effects(n_variables, tau_A=1.0, tau_S=1.0, rng_np=None):
     """Draw the network-level distribution parameters"""
 
     if rng_np is None:
         rng_np = np.random.default_rng()
 
     # Draws overall effects
-    TE = rng_np.normal(loc=0 , scale=np.sqrt(tau_A), size=n_variables)
+    TE = rng_np.normal(
+        loc=0, 
+        scale=np.sqrt(tau_A),
+        size=n_variables
+    )/np.sqrt(tau_S)  # Scaling to units of noise
 
     return TE
 
 
-def draw_subject_array(TE, n_subs, tau_S, tau_mu, rng_np=None):
+def draw_subject_array(TE, n_subs, tau_mu, rng_np=None):
 
     if rng_np is None:
         rng_np = np.random.default_rng()
@@ -25,7 +29,7 @@ def draw_subject_array(TE, n_subs, tau_S, tau_mu, rng_np=None):
 
     for i in range(n_subs):
 
-        ind_draw = rng_np.normal(loc=0, scale=np.sqrt(tau_S), size=TE.shape)
+        ind_draw = rng_np.normal(loc=0, scale=1, size=TE.shape)
 
         R = TE_b + ind_draw
         subject_array[i] = R

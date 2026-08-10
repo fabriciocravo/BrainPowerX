@@ -7,6 +7,7 @@ from matplotlib.transforms import Affine2D
 from study_planning_strats import (
     estimate_power_strongest_effect,
     estimate_power_smallest_significant_effect,
+    estimate_power_average_significant_effect,
     estimate_power_average_effect,
     estimate_power_subsampling_repetition,
     estimate_true_power
@@ -168,7 +169,7 @@ if __name__ == "__main__":
     SAMPLE_SIZES = (10, 20, 40, 80, 120)
     K_VALUES = (5, 10, 20, 40, 100)
 
-    ESTIMATOR = estimate_power_strongest_effect
+    ESTIMATOR = estimate_power_average_effect
 
     results_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
