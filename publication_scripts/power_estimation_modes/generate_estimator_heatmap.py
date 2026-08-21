@@ -6,7 +6,6 @@ from matplotlib.transforms import Affine2D
 
 from study_planning_strats import (
     p_est_strongest_effect,
-    p_est_smallest_significant_effect,
     p_est_average_significant_effect,
     p_est_average_effect,
     p_est_subsampling_repetition,
@@ -18,8 +17,6 @@ from study_planning_strats import (
 from effect_model import (
     draw_true_effects,
     draw_subject_array,
-    group_level_effect,
-    stack_subject_arrays
 )
 
 
