@@ -2,28 +2,15 @@ import glob
 import pickle
 
 import numpy as np
-from scipy.io import loadmat
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
-
-
-def _struct_to_dict(mat_struct):
-    """Convert a scipy mat_struct (struct_as_record=False) to a plain dict
-    so downstream code can use bracket access, e.g. meta_data['test_types'].
-    """
-    return {
-        field: getattr(mat_struct, field) for
-        field in mat_struct._fieldnamee
-    }
-
+from pymatreader import read_mat
+import os
 
 # Function to get parameter from mat file
 def get_param_from_mat(mat_file, parameter):
-    data = loadmat(mat_file, squeeze_me=True, struct_as_record=False)
-    value = data[parameter]
-    if hasattr(value, "_fieldnames"):
-        value = _struct_to_dict(value)
-    return value
+    data = read_mat(mat_file)
+    return data[parameter]
 
 
 # Data in './distribution_fit_data/' - mat files
@@ -37,7 +24,7 @@ for mat in file_mats:
 
     # From matfile in meta_data
     meta_data = get_param_from_mat(mat, "meta_data")
-    test_type = meta_data["test_types"]
+    test_type = meta_data["test_type"]
 
     if test_type == "t":
         n = meta_data["n_subs"]
@@ -47,6 +34,7 @@ for mat in file_mats:
     elif test_type == "t2":
         n1 = meta_data["n_subs_1"]
         n2 = meta_data["n_subs_2"]
+        n = n1 + n2
         denominator = np.sqrt((n1 * n2) / (n1 + n2))
 
     elif test_type == "r":
@@ -59,36 +47,64 @@ for mat in file_mats:
     # Convert t-stats to np array
     t_stats = np.asarray(t_stats)
 
+    n_var = len(t_stats)
+
     # Calculate effect sizes
     ef_sizes = t_stats / denominator
 
     # Get distribution KDE - gaussian
     kde = gaussian_kde(ef_sizes)
 
+    # Get basename
+    base_name = os.path.basename(mat)
+
     # Add KDE object to dictionary
     # Key file name - value KDE object
-    kde_dict[mat] = kde
+    kde_dict[base_name] = {'kde': kde, 'n_subs': n, 'n_var': n_var}
 
 
 # Pickle save the dictionary in '/distribution_fit_data/'
 with open("./distribution_fit_data/kde_fit.pkl", "wb") as f:
     pickle.dump(kde_dict, f)
 
-# Get number of keys in dictionary
+
+
+# Map filename substrings to short, human-readable labels
+NAME_MAP = {
+    "abcd_fc_gt-test1-t2-Ground_Truth.mat": "ABCD FC - Gender",
+    "abcd_fc_gt-test14-r-Ground_Truth.mat": "ABCD FC - Depression/Anxiety",
+    "hcp_activation-WM-t-Ground_Truth.mat": "HCP Activation - Working Memory",
+    "hpc_fc_gt-REST_GAMBLING-t-Ground_Truth.mat": "HCP FC - Gambling",
+}
+
 n_keys = len(kde_dict)
 
-# Create plot with figure number equal to keys
-fig, axes = plt.subplots(n_keys, 1, figsize=(6, 3 * n_keys))
-if n_keys == 1:
-    axes = [axes]
+# Number of columns in the grid
+n_cols = 2
+n_rows = int(np.ceil(n_keys / n_cols))
+
+fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 3 * n_rows))
+axes = np.atleast_2d(axes).flatten()
 
 # For each key in the KDE dictionary
-for ax, (name, kde) in zip(axes, kde_dict.items()):
+for ax, (name, entry) in zip(axes, kde_dict.items()):
+    kde = entry["kde"]
+    n_subs = entry["n_subs"]
 
     # Plot the pdf of the KDE
-    x = np.linspace(kde.dataset.min(), kde.dataset.max(), 500)
+    x = np.linspace(
+        np.percentile(kde.dataset, 2.5),
+        np.percentile(kde.dataset, 97.5),
+        500
+    )
     ax.plot(x, kde(x))
-    ax.set_title(name)
+
+    name = NAME_MAP[name]
+    ax.set_title(f"{name} (n={n_subs})")
+
+# Hide any unused subplots (when n_keys isn't a perfect multiple of n_cols)
+for ax in axes[n_keys:]:
+    ax.axis("off")
 
 plt.tight_layout()
 plt.show()
