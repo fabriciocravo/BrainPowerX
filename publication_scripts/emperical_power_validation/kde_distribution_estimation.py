@@ -12,6 +12,8 @@ def get_param_from_mat(mat_file, parameter):
     data = read_mat(mat_file)
     return data[parameter]
 
+fig_x = 3.5
+fig_y = 2.2
 
 # Data in './distribution_fit_data/' - mat files
 # Glob files open in file_mats
@@ -83,7 +85,11 @@ n_keys = len(kde_dict)
 n_cols = 2
 n_rows = int(np.ceil(n_keys / n_cols))
 
-fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 3 * n_rows))
+fig, axes = plt.subplots(
+    n_rows,
+    n_cols,
+    figsize=(fig_x * n_cols, fig_y * n_rows)
+)
 axes = np.atleast_2d(axes).flatten()
 
 # For each key in the KDE dictionary

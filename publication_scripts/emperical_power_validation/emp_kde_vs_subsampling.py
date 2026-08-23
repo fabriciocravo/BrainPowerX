@@ -8,10 +8,13 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
 # Variable with key name to use for this analysis
-var_key = 'hpc_fc_gt-REST_GAMBLING-t-Ground_Truth.mat'
+var_key = 'abcd_fc_gt-test14-r-Ground_Truth.mat'
+# var_key = 'abcd_fc_gt-test1-t2-Ground_Truth.mat'
+# var_key = 'hcp_activation-WM-t-Ground_Truth.mat'
+# var_key = 'hpc_fc_gt-REST_GAMBLING-t-Ground_Truth.mat'
 sub_list = [20, 80, 200]
 n_outer_reps = 5
-n_inner_reps = 5
+n_inner_reps = 100
 alpha = 0.05
 STRIP_WIDTH = 10  # For the width of the cmap
 fig_w = 1.0
@@ -73,9 +76,21 @@ def compute_power_for_n(
         # Calculate power from true effect for each true effect - 2 sided
         df = n_sub - 1
         ncp = true_effects * np.sqrt(n_sub)
-        t_crit = stats.t.ppf(1 - alpha / 2, df)
-        true_power = (1 - stats.nct.cdf(t_crit, df, ncp)
-                      + stats.nct.cdf(-t_crit, df, ncp))
+        t_crit = stats.t.ppf(1 - alpha / (2*n_var), df)
+
+        # Break the integral due to numerical instability
+        cdf_pos = stats.nct.cdf(t_crit, df, ncp)
+        cdf_neg = stats.nct.cdf(-t_crit, df, ncp)
+
+        # Solve numerical instabilities
+        cdf_pos = np.where(np.isnan(cdf_pos), 1.0, cdf_pos)
+        cdf_neg = np.where(np.isnan(cdf_neg), 0.0, cdf_neg)
+
+        # Assign to the correct broken values
+        true_power = 1 - cdf_pos + cdf_neg
+
+        # Convert to one to avoid numerical instability
+        true_power = np.nan_to_num(true_power, nan=0)
 
         # Sort and add to culmutative true power vec
         sorted_true_power = np.sort(true_power)
@@ -116,7 +131,7 @@ def compute_power_for_n(
         cum_ss_vec += sorted_subsampled_power
 
         # Calc dif sorted tp and sorted ss vec
-        dif_vec = sorted_true_power - sorted_subsampled_power
+        dif_vec = np.abs(sorted_true_power - sorted_subsampled_power)
 
         # Add to culmultative dif vec
         cum_dif_vec += dif_vec
@@ -163,16 +178,36 @@ for j, n_sub in enumerate(n_range):
     ss_strip = np.tile(subsampled_power_matrix[:, j:j+1], (1, STRIP_WIDTH))
     dif_strip = np.tile(diff_matrix[:, j:j+1], (1, STRIP_WIDTH))
 
-    power_im = axes[0, j].imshow(tp_strip, aspect='auto', cmap='viridis', vmin=0, vmax=1)
+    power_im = axes[0, j].imshow(
+        tp_strip,
+        aspect='auto',
+        origin='lower',
+        cmap='viridis',
+        vmin=0,
+        vmax=1
+    )
     axes[0, j].set_title(f'n={n_sub}')
     axes[0, j].set_xticks([])
     axes[0, j].set_yticks([])
 
-    axes[1, j].imshow(ss_strip, aspect='auto', cmap='viridis', vmin=0, vmax=1)
+    axes[1, j].imshow(
+        ss_strip,
+        aspect='auto',
+        origin='lower',
+        cmap='viridis',
+        vmin=0,
+        vmax=1
+    )
     axes[1, j].set_xticks([])
     axes[1, j].set_yticks([])
 
-    diff_im = axes[2, j].imshow(dif_strip, aspect='auto', cmap='coolwarm', vmin=-0.2, vmax=0.2)
+    diff_im = axes[2, j].imshow(
+        dif_strip,
+        aspect='auto',
+        cmap='coolwarm',
+        vmin=-0.2,
+        vmax=0.2
+    )
     axes[2, j].set_xticks([])
     axes[2, j].set_yticks([])
 
