@@ -44,7 +44,8 @@ def calculate_power_curve(
         centrality,
         n_var,
         n_sub_range,
-        alpha
+        alpha,
+        skip_range=20,
 ):
 
     if centrality < 0:
@@ -53,7 +54,7 @@ def calculate_power_curve(
             'designed for only positive absolute effect sizes'
         )
 
-    sub_array = np.arange(2, n_sub_range + 1)
+    sub_array = np.arange(20, n_sub_range + 1, skip_range)
     power_array = np.zeros(sub_array.size)
 
     # Calculate power from true effect for each true effect - 2 sided

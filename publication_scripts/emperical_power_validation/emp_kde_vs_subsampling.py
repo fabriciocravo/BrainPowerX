@@ -89,9 +89,6 @@ def compute_power_for_n(
         # Assign to the correct broken values
         true_power = 1 - cdf_pos + cdf_neg
 
-        # Convert to one to avoid numerical instability
-        true_power = np.nan_to_num(true_power, nan=0)
-
         # Sort and add to culmutative true power vec
         sorted_true_power = np.sort(true_power)
         cum_tp_vec += sorted_true_power

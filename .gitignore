@@ -2,3 +2,4 @@ myapp/data/*
 *.asv
 myapp/results/*
 **/__pycache__/
+*.png

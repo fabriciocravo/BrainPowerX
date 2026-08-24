@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 from pymatreader import read_mat
 import os
 
+
 # Function to get parameter from mat file
 def get_param_from_mat(mat_file, parameter):
     data = read_mat(mat_file)
     return data[parameter]
+
 
 fig_x = 3.5
 fig_y = 2.2
@@ -28,6 +30,12 @@ for mat in file_mats:
     meta_data = get_param_from_mat(mat, "meta_data")
     test_type = meta_data["test_type"]
 
+    # Get t-stats
+    t_stats = get_param_from_mat(mat, "edge_level_stats")
+
+    # Convert t-stats to np array
+    t_stats = np.asarray(t_stats)
+
     if test_type == "t":
         n = meta_data["n_subs"]
         denominator = np.sqrt(n)
@@ -42,17 +50,19 @@ for mat in file_mats:
     elif test_type == "r":
         n = meta_data["n_subs"]
         df = n - 2
+        r = t_stats / np.sqrt(t_stats**2 + df)      # t -> r
+        ef_sizes = 2 * r / np.sqrt(1 - r**2)        # r -> d
 
-    # Get t-stats
-    t_stats = get_param_from_mat(mat, "edge_level_stats")
-
-    # Convert t-stats to np array
-    t_stats = np.asarray(t_stats)
+    else:
+        raise ValueError(
+            f"Unknown test_type '{test_type}' in {mat}"
+        )
 
     n_var = len(t_stats)
 
     # Calculate effect sizes
-    ef_sizes = t_stats / denominator
+    if test_type != "r":
+        ef_sizes = t_stats / denominator
 
     # Get distribution KDE - gaussian
     kde = gaussian_kde(ef_sizes)

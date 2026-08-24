@@ -110,3 +110,31 @@ if __name__ == '__main__':
     plot_comparison(effect_matrix, pair_means, study_names)
     plt.show()
 
+    # Create empty average power matrix 
+
+    # Size number of mats and 
+    # np.arange(20, n_sub_range + 1, skip_range=20)
+    # calculated power values
+    # and + 1 for power difference
+
+    # Given the effect size matrix
+
+    # For each effect vector
+
+        # Get number of variables
+
+        # Empty vector to accumulate results
+
+        # For each effect
+
+            # Compute the power curve for each effect
+
+            # Add to empty vector
+
+        # Calculate average power curve
+
+    # Loop over all pairs 
+
+        # Calculate average difference between power
+
+    # return power matrix 
