@@ -41,28 +41,22 @@ def convert_t_stats(t_stats, meta_data):
 
 
 def calculate_power_curve(
-        centrality,
+        centrality_vector,
         n_var,
         n_sub_range,
         alpha,
         skip_range=20,
 ):
 
-    if centrality < 0:
-        raise ValueError(
-            'Function calculate_power_curve '
-            'designed for only positive absolute effect sizes'
-        )
-
     sub_array = np.arange(20, n_sub_range + 1, skip_range)
-    power_array = np.zeros(sub_array.size)
+    power_array = np.zeros((np.size(centrality_vector), sub_array.size))
 
     # Calculate power from true effect for each true effect - 2 sided
     for i, n_sub in enumerate(sub_array):
 
         df = n_sub - 1
         t_crit = stats.t.ppf(1 - alpha / (2 * n_var), df)
-        ncp = centrality * np.sqrt(n_sub)
+        ncp = centrality_vector * np.sqrt(n_sub)
 
         # Break the integral due to numerical instability
         cdf_pos = stats.nct.cdf(t_crit, df, ncp)
@@ -73,7 +67,7 @@ def calculate_power_curve(
         cdf_neg = np.where(np.isnan(cdf_neg), 0.0, cdf_neg)
 
         # Assign to the correct broken values
-        power_array[i] = 1 - cdf_pos + cdf_neg
+        power_array[:, i] = 1 - cdf_pos + cdf_neg
 
-    return sub_array, power_array
+    return power_array
 

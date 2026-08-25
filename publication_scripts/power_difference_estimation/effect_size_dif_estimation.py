@@ -5,7 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
-from utils import get_param_from_mat, convert_t_stats
+from utils import (
+    get_param_from_mat,
+    convert_t_stats,
+    calculate_power_curve
+)
 
 
 # Set parameter with gt directory
@@ -71,10 +75,68 @@ def pairwise_mean_absolute_difference(effect_matrix):
     return np.array(pair_means)
 
 
-def plot_comparison(effect_matrix, pair_means, study_names, out_path=None):
+def calculate_average_power_matrix(
+        effect_matrix,
+        alpha=0.05,
+        n_sub_range=200,
+        skip_range=50
+):
+    """
+    Average power curve per study, plus mean pairwise difference between them.
+
+    Returns
+    -------
+    sub_array     : (n_points,)                sample sizes
+    power_matrix  : (n_studies + 1, n_points)  per-study average power curves,
+                    last row = mean pairwise |difference|
+    """
+
+    # Create empty average power matrix
+    # Size number of mats and calculated power values, + 1 for power difference
+    sub_array = np.arange(20, n_sub_range + 1, skip_range)
+    n_studies = effect_matrix.shape[0]
+    power_matrix = np.zeros((n_studies + 1, sub_array.size))
+
+    # Given the effect size matrix
+    # For each effect vector
+    for study_idx, effect_vector in enumerate(effect_matrix):
+
+        # Get number of variables
+        n_var = effect_vector.size
+
+        # Compute the power curve for each effect
+        power_curve_mat = calculate_power_curve(
+            effect_vector, n_var, n_sub_range, alpha, skip_range
+        )
+
+        # Calculate average power curve
+        power_matrix[study_idx] = power_curve_mat.mean(axis=0)
+
+    # Loop over all pairs
+    # Calculate average difference between power
+    accumulated_diff = np.zeros(sub_array.size)
+    n_pairs = 0
+
+    for i in range(n_studies):
+        for j in range(i + 1, n_studies):
+            accumulated_diff += np.abs(power_matrix[i] - power_matrix[j])
+            n_pairs += 1
+
+    power_matrix[-1] = accumulated_diff / n_pairs
+
+    # return power matrix
+    return sub_array, power_matrix
+
+
+def plot_comparison(
+        effect_matrix,
+        pair_means,
+        study_names,
+        out_path=None
+):
 
     # Figure with 2 plots
-    fig, (ax_left, ax_mid, ax_right) = plt.subplots(1, 3, figsize=(11, 4.5))
+    fig, (ax_left, ax_mid) = plt.subplots(1, 2, figsize=(11, 4.5))
 
     # Plot KDE of half normal of all effect size distributions
     grid = np.linspace(0, effect_matrix.max(), 400)
@@ -104,37 +166,14 @@ def plot_comparison(effect_matrix, pair_means, study_names, out_path=None):
     return fig
 
 
+
 if __name__ == '__main__':
     study_names, effect_matrix = load_sorted_effect_vectors(GTD)
     pair_means = pairwise_mean_absolute_difference(effect_matrix)
-    plot_comparison(effect_matrix, pair_means, study_names)
+
+    plot_comparison(
+        effect_matrix,
+        pair_means,
+        study_names
+    )
     plt.show()
-
-    # Create empty average power matrix 
-
-    # Size number of mats and 
-    # np.arange(20, n_sub_range + 1, skip_range=20)
-    # calculated power values
-    # and + 1 for power difference
-
-    # Given the effect size matrix
-
-    # For each effect vector
-
-        # Get number of variables
-
-        # Empty vector to accumulate results
-
-        # For each effect
-
-            # Compute the power curve for each effect
-
-            # Add to empty vector
-
-        # Calculate average power curve
-
-    # Loop over all pairs 
-
-        # Calculate average difference between power
-
-    # return power matrix 
