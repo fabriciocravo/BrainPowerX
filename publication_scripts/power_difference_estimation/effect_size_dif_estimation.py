@@ -144,9 +144,6 @@ def plot_comparison(
     # Figure with 2 plots
     fig, (ax_left, ax_mid) = plt.subplots(1, 2, figsize=(11, 4.5))
 
-    print(study_names)
-    exit()
-
     # Plot KDE of half normal of all effect size distributions
     grid = np.linspace(0, effect_matrix.max(), 400)
     for name, ef_sizes in zip(study_names, effect_matrix):
@@ -160,6 +157,7 @@ def plot_comparison(
     ax_left.set_xlabel('|Cohen\'s d|')
     ax_left.set_ylabel('Density')
     ax_left.set_title('Effect size distributions within category')
+    ax_left.legend()
 
     # Plot KDE of distribution of mean subtraction between effects
     grid_diff = np.linspace(0, pair_means.max() * 1.1, 400)
