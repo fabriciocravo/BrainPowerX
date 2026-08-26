@@ -4,6 +4,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
+from color_choice import (
+    remove_gt_mat,
+    COLOR_DICT,
+    TASK_DICT
+)
 
 from utils import (
     get_param_from_mat,
@@ -13,7 +18,8 @@ from utils import (
 
 
 # Set parameter with gt directory
-GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Task Voxel'
+GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Task Fc'
+# GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Task Voxel'
 
 
 def load_sorted_effect_vectors(gt_dir):
@@ -138,11 +144,18 @@ def plot_comparison(
     # Figure with 2 plots
     fig, (ax_left, ax_mid) = plt.subplots(1, 2, figsize=(11, 4.5))
 
+    print(study_names)
+    exit()
+
     # Plot KDE of half normal of all effect size distributions
     grid = np.linspace(0, effect_matrix.max(), 400)
     for name, ef_sizes in zip(study_names, effect_matrix):
+        name = remove_gt_mat(name)
+        task_name = TASK_DICT[name]
+        color = COLOR_DICT[name]
+    
         kde = gaussian_kde(ef_sizes)
-        ax_left.plot(grid, kde(grid), lw=1.5, label=name)
+        ax_left.plot(grid, kde(grid), color=color, lw=1.5, label=task_name)
 
     ax_left.set_xlabel('|Cohen\'s d|')
     ax_left.set_ylabel('Density')
