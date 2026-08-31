@@ -51,13 +51,11 @@ def calculate_power_fwer(
     nc = np.sqrt(N) * e_mat
 
     # Primary tail (Survival function)
-    pow_upper = np.nan_to_num(stats.nct.sf(t_crit, N - 1, nc), nan=0.0)
+    pow_upper = stats.nct.sf(t_crit, N - 1, nc)
+    pow_upper = np.where(np.isnan(pow_upper), 1.0, pow_upper)
 
     # Opposite tail (CDF) - fill numerical precision NaNs with 0.0
-    pow_lower = np.nan_to_num(stats.nct.cdf(-t_crit, N - 1, nc), nan=0.0)
+    pow_lower = stats.nct.cdf(-t_crit, N - 1, nc)
+    pow_lower = np.where(np.isnan(pow_lower), 0.0, pow_lower)
 
     return pow_upper + pow_lower
-
-
-# Random number global
-_rng = np.random.default_rng()
