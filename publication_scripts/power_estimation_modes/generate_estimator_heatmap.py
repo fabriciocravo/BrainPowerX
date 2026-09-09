@@ -2,8 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Affine2D
-
-
 from study_planning_strats import (
     p_est_strongest_effect,
     p_est_average_significant_effect,
@@ -13,7 +11,6 @@ from study_planning_strats import (
     tp_average_significant_effect,
     estimate_true_power
 )
-
 from effect_model import (
     draw_true_effects,
     draw_subject_array,
@@ -88,7 +85,8 @@ def plot_curve_and_heatmap(
     diff_mean,
     sample_sizes,
     k_values,
-    n_curve=40,
+    k_curve,
+    # n_curve=40,
     figsize=(12, 5),
 ):
     # Create figure and subplots
@@ -96,18 +94,18 @@ def plot_curve_and_heatmap(
     fig, (ax_curve, ax_heat) = plt.subplots(1, 2, figsize=figsize)
 
     # Get the index of subjects for the curve
-    n_idx = list(sample_sizes).index(n_curve)
+    n_idx = list(k_values).index(k_curve)
 
     # Plot K versus error curve for select sample size
     ax_curve.plot(
         k_values,
-        results_mean[n_idx, :],
+        results_mean[:, n_idx],
         marker="o",
     )
-    ax_curve.set_xlabel("K")
+    ax_curve.set_xlabel("Number of Subjects")
     ax_curve.set_ylabel("Estimated power")
     ax_curve.set_ylim(0, 1)
-    ax_curve.set_title(f"N = {n_curve}")
+    ax_curve.set_title(f"Power estimation with K studies={k_curve}")
 
     true_power = results_mean - diff_mean
 
@@ -158,6 +156,9 @@ def plot_curve_and_heatmap(
 
 if __name__ == "__main__":
 
+    ESTIMATOR = p_est_strongest_effect
+    # ESTIMATOR = p_est_average_significant_effect
+
     SEED = 20260724
     N_NODES = 30
     N_VARIABLES = N_NODES * (N_NODES - 1) // 2
@@ -167,10 +168,7 @@ if __name__ == "__main__":
 
     N_REPS = 10
     SAMPLE_SIZES = [10, 20, 40, 80, 120]
-    # K_VALUES = (5, 10, 20, 40, 100)
-    K_VALUES = [3]
-
-    ESTIMATOR = p_est_average_significant_effect
+    K_VALUES = (1, 5, 10, 20, 40, 100)
 
     ESTIMATOR_TO_TRUE_POWER = {
         p_est_strongest_effect: tp_strongest_effect,

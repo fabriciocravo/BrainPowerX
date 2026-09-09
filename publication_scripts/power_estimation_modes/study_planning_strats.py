@@ -198,7 +198,7 @@ def p_est_subsampling_repetition(
     data_set_size = pooled_subjects.shape[0]
 
     # Start empty counting matrix
-    p_matrix = np.zeros_like(stacked_subject_array[0])
+    p_matrix = np.zeros(n_variables, dtype=float)
 
     # Each map is a subsampled experiment
     # For each n_rep chose a map at random

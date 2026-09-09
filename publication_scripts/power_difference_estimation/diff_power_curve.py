@@ -3,6 +3,11 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from color_choice import (
+    remove_gt_mat,
+    COLOR_DICT,
+    TASK_DICT
+)
 
 # return one directory to /brainpowerx/
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -11,8 +16,10 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 RESULTS_DIR = BASE_DIR / "myapp" / "results"
 
 # glob all directories containing the following - base study
-base_study = 'hcp_fc*_t'  # * can be anything
-
+# base_study = 'hcp_fc*_t'  # * can be anything
+# base_study = 'hcp_act*_t'
+# base_study = ["abcd_fc_sex*", "abcd_fc_age*", "abcd_fc_bmi_z*"]
+base_study = ["abcd_fc_cbcl_internalizing_r", "abcd_fc_cbcl_externalizing_r", "abcd_fc_cbcl_aggressive_r", "abcd_fc_cbcl_rule_breaking_r", "abcd_fc_cbcl_attention_r", "abcd_fc_cbcl_thought_r", "abcd_fc_cbcl_social_r", "abcd_fc_cbcl_somatic_r", "abcd_fc_cbcl_withdrawn_r", "abcd_fc_cbcl_anx_dep_r"]
 
 # function to read power fit curves
 # Signature - metada, method
@@ -37,8 +44,13 @@ def get_power_fit(metadata, power_fit_name, method):
 # Create dicionary to store results function
 results = {}
 
+study_dirs = sorted(set(
+    d for pattern in base_study
+    for d in RESULTS_DIR.glob(pattern)
+))
+
 # for each of those directories
-for study_dir in sorted(RESULTS_DIR.glob(base_study)):
+for study_dir in study_dirs:
     if not study_dir.is_dir():
         continue
 
@@ -53,8 +65,18 @@ for study_dir in sorted(RESULTS_DIR.glob(base_study)):
     # Get power fit - power_fit_q100, Parameteric_FWER
     fwer_fit = get_power_fit(metadata, "power_fit_q100", "Parametric_FWER")
 
-    # Get power fit - power_fit_q10, Fast_TFCE
-    tfce_fit = get_power_fit(metadata, "power_fit_q10", "Fast_TFCE")
+    # Get power fit - power_fit_q10, try multiple TFCE method name variants
+    for method_name in ("Fast_TFCE_cpp", "IC_TFCE_Node_cpp", "Fast_TFCE"):
+        try:
+            tfce_fit = get_power_fit(metadata, "power_fit_q10", method_name)
+            break
+        except KeyError:
+            continue
+    else:
+        raise KeyError(
+            "No TFCE method found in power_fit_q10 "
+            " for any of the expected method names"
+        )
 
     # Store in dicionary with study name as key
     results[study_dir.name] = {
@@ -78,11 +100,16 @@ for study_name, study in results.items():
         100
     )
 
+    # Process study name
+    key_name = remove_gt_mat(study_name)
+    color = COLOR_DICT[key_name]
+    label_name = TASK_DICT[key_name]
+
     # Parametric_FWER
     # evalute function according to sample size range
     # Plot in left figure
     y_fwer = study["Parametric_FWER"](x)
-    ax_left.plot(x, y_fwer, label=study_name)
+    ax_left.plot(x, y_fwer, color=color, label=label_name)
     lo_fwer = min(lo_fwer, y_fwer.min())
     hi_fwer = max(hi_fwer, y_fwer.max())
 
@@ -90,21 +117,26 @@ for study_name, study in results.items():
     # evalute function according to sample size range
     # Plot in right figure
     y_tfce = study["Fast_TFCE"](x)
-    ax_right.plot(x, y_tfce, label=study_name)
+    ax_right.plot(x, y_tfce, color=color, label=label_name)
     lo_tfce = min(lo_tfce, y_tfce.min())
     hi_tfce = max(hi_tfce, y_tfce.max())
 
 
 # Set axis and plot stuff
-ax_left.set_title("Parametric_FWER (q100)")
-ax_right.set_title("Fast_TFCE (q10)")
+ax_left.set_title("Parametric FWER (q100)")
+ax_right.set_title("TFCE (q10)")
 for ax, lo, hi in ((ax_left, lo_fwer, hi_fwer), (ax_right, lo_tfce, hi_tfce)):
     ax.set_xlabel("Sample size")
     pad = 2.5
     ax.set_ylim(lo - pad, hi + pad)
     ax.tick_params(labelleft=True)
 ax_left.set_ylabel("Power")
-ax_right.legend(fontsize=7)
+
+if isinstance(base_study, list) and base_study[0] != 'abcd_fc_cbcl_internalizing_r':
+    ax_left.legend(fontsize=12)
+    ax_right.legend(fontsize=12)
+else:
+    ax_left.legend(fontsize=8)
 
 plt.tight_layout()
 plt.show()

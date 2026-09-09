@@ -18,6 +18,12 @@ def edges_to_pvalues(exp, N):
     return p_mat
 
 
+def edges_to_pvalues_from_experiment(E, N):
+    z_stat = np.sqrt(N) * E  # Assume known subject variance
+    p_mat = 2 * stats.norm.sf(np.abs(z_stat))
+    return p_mat
+
+
 def p_values_true_effects(TE, N):
 
     # Convert true effects to true t-stat

@@ -18,8 +18,10 @@ from utils import (
 
 
 # Set parameter with gt directory
-GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Task Fc'
+# GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Task Fc'
 # GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Task Voxel'
+# GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Physical'
+GTD = '/Users/f.cravogomes/Desktop/Pc_Res_Updated/Shinny_Calculator/gt_data/Psychological'
 
 
 def load_sorted_effect_vectors(gt_dir):
@@ -154,6 +156,22 @@ def plot_comparison(
         kde = gaussian_kde(ef_sizes)
         ax_left.plot(grid, kde(grid), color=color, lw=1.5, label=task_name)
 
+    # Overall mean of category
+    # Vertical line at the mean across all effects (all studies pooled)
+    overall_mean = effect_matrix.mean()
+    ax_left.axvline(overall_mean, color="black", lw=1.2, ls="--")
+
+    ax_left.annotate(
+        f"Mean = {overall_mean:.2f}",
+        xy=(overall_mean, ax_left.get_ylim()[1]),
+        xytext=(5, -5),
+        textcoords="offset points",
+        va="top",
+        ha="left",
+        fontsize=14,
+        color="black",
+    )
+
     ax_left.set_xlabel('|Cohen\'s d|')
     ax_left.set_ylabel('Density')
     ax_left.set_title('Effect size distributions within category')
@@ -164,6 +182,20 @@ def plot_comparison(
     kde_diff = gaussian_kde(pair_means)
     ax_mid.plot(grid_diff, kde_diff(grid_diff), color='k', lw=1.5)
     ax_mid.fill_between(grid_diff, kde_diff(grid_diff), alpha=0.25, color='k')
+
+    # Mark the mean pairwise divergence
+    mean_diff = pair_means.mean()
+    ax_mid.axvline(mean_diff, color='k', ls='--', lw=1)
+    # Add mean value as annotation
+    ax_mid.annotate(
+        f'Mean = {mean_diff:.3f}',
+        xy=(mean_diff, 0),
+        xytext=(mean_diff, ax_mid.get_ylim()[1] * 0.05),
+        rotation=0,
+        va='bottom',
+        ha='right',
+        fontsize=14
+    )
 
     ax_mid.set_xlabel('Mean |quantile difference| between study pairs')
     ax_mid.set_ylabel('Density')

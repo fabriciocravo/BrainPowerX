@@ -13,7 +13,7 @@ var_key = 'abcd_fc_gt-test14-r-Ground_Truth.mat'
 # var_key = 'hcp_activation-WM-t-Ground_Truth.mat'
 # var_key = 'hpc_fc_gt-REST_GAMBLING-t-Ground_Truth.mat'
 sub_list = [20, 80, 200]
-n_outer_reps = 5
+n_outer_reps = 10
 n_inner_reps = 100
 alpha = 0.05
 STRIP_WIDTH = 10  # For the width of the cmap
@@ -142,7 +142,7 @@ def compute_power_for_n(
 
 
 # For each sample sizes - dispatched in parallel, one worker per n_sub
-results = Parallel(n_jobs=-1, backend='loky')(
+results = Parallel(n_jobs=5, backend='loky')(
     delayed(compute_power_for_n)(
         n_sub,
         true_effects,
@@ -201,9 +201,9 @@ for j, n_sub in enumerate(n_range):
     diff_im = axes[2, j].imshow(
         dif_strip,
         aspect='auto',
-        cmap='coolwarm',
-        vmin=-0.2,
-        vmax=0.2
+        cmap='Blues',
+        vmin=0,
+        vmax=0.05
     )
     axes[2, j].set_xticks([])
     axes[2, j].set_yticks([])

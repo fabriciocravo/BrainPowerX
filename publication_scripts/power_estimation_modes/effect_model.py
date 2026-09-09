@@ -37,6 +37,23 @@ def draw_subject_array(TE, n_subs, tau_mu, rng_np=None):
     return subject_array
 
 
+def draw_experiment_array(TE, n_subs, tau_mu, rng_np=None):
+
+    if rng_np is None:
+        rng_np = np.random.default_rng()
+
+    # Introduce a small bias to every experiment
+    TE_b = TE + rng_np.normal(loc=0, scale=np.sqrt(tau_mu))
+
+    E = TE_b + rng_np.normal(
+        loc=0,
+        scale=1/np.sqrt(n_subs),
+        size=TE.shape
+    )
+    
+    return E
+
+
 def stack_subject_arrays(*subject_arrays):
     return np.concatenate(*subject_arrays, axis=0)
 
