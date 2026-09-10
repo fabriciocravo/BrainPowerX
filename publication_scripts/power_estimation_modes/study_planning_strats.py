@@ -39,8 +39,6 @@ def p_est_strongest_effect(
         sample_size
     )
 
-    print(sample_size, max_effect, power)
-
     return power
 
 
