@@ -66,25 +66,3 @@ def calculate_power_fwer(
 
     return pow_upper + pow_lower
 
-
-def calculate_power_fwer_normal(
-        e_mat,
-        n_variables,
-        N,
-        alpha=0.05
-):
-    
-    # Two-sided critical value under a standard normal null,
-    # Bonferroni-corrected across n_variables
-    z_crit = stats.norm.ppf(1 - alpha / (2 * n_variables))
-
-    # For generative model with TE + Normal(0, 1/sqrt(N))
-    nc = np.sqrt(N) * e_mat
-
-    # Upper tail: P(Z > z_crit) where Z ~ N(nc, 1)
-    pow_upper = stats.norm.sf(z_crit - nc)
-
-    # Lower tail: P(Z < -z_crit)
-    pow_lower = stats.norm.cdf(-z_crit - nc)
-
-    return pow_upper + pow_lower

@@ -27,7 +27,7 @@ def generate_estimator_comp_figure(
         sample_sizes,
         seed=None
 ):
-
+    
     # Create np array with columns (n3 vs n K values)
     results = np.zeros((len(sample_sizes), len(k_values)))
     true_power = np.zeros(len(sample_sizes))
@@ -74,7 +74,9 @@ def generate_estimator_comp_figure(
                 K
             )
 
-    results_diff = results - true_power[:, None]
+    results_diff = np.abs(results - true_power[:, None])
+
+    print(seed)
 
     return results, results_diff
 
@@ -82,6 +84,8 @@ def generate_estimator_comp_figure(
 def plot_curve_and_heatmap(
     results_mean,
     diff_mean,
+    ci_lower,
+    ci_upper,
     sample_sizes,
     k_values,
     k_curve,
@@ -94,11 +98,17 @@ def plot_curve_and_heatmap(
     # Get the index of subjects for the curve
     n_idx = list(k_values).index(k_curve)
 
+    mean_vals = results_mean[:, n_idx]
+    yerr_lower = np.clip(mean_vals - ci_lower[:, n_idx], 0, 1)
+    yerr_upper = np.clip(ci_upper[:, n_idx] - mean_vals, 0, 1)
+
     # Plot K versus error curve for select sample size
-    ax_curve.plot(
+    ax_curve.errorbar(
         sample_sizes,
-        results_mean[:, n_idx],
+        mean_vals,
+        yerr=[yerr_lower, yerr_upper],
         marker="o",
+        capsize=4,
         label="Estimated power"
     )
     ax_curve.set_xlabel("Number of Subjects")
@@ -169,7 +179,7 @@ if __name__ == "__main__":
     TAU_S = 1.0
     TAU_MU = 0
 
-    N_REPS = 1000
+    N_REPS = 10
     SAMPLE_SIZES = [10, 20, 40, 80, 120]
     K_VALUES = (1, 5, 10, 20, 40, 100)
 
@@ -182,10 +192,11 @@ if __name__ == "__main__":
     ESTIMATOR_TP = ESTIMATOR_TO_TRUE_POWER[ESTIMATOR]
 
     results_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
+    results_sq_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
 
     # Main loop - estimate power difference with LLN
-    results_list = Parallel(n_jobs=5)(
+    results_list = Parallel(n_jobs=1)(
         delayed(generate_estimator_comp_figure)(
             estimator=ESTIMATOR,
             true_power_estimator=ESTIMATOR_TP,
@@ -202,14 +213,24 @@ if __name__ == "__main__":
 
     for results, results_diff in results_list:
         results_sum += results
+        results_sq_sum += results ** 2
         diff_sum += results_diff
 
     results_mean = results_sum / N_REPS
+    variance = (results_sq_sum / N_REPS) - results_mean ** 2
+    std = np.sqrt(variance)
+    std = np.sqrt(variance)
+    sem = std / np.sqrt(N_REPS)
+    ci_lower = results_mean - 1.96 * sem
+    ci_upper = results_mean + 1.96 * sem
+
     diff_mean = diff_sum / N_REPS
 
     fig, _ = plot_curve_and_heatmap(
         results_mean,
         diff_mean,
+        ci_lower,
+        ci_upper,
         SAMPLE_SIZES,
         K_VALUES,
         k_curve=40,

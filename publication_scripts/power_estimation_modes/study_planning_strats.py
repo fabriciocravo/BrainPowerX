@@ -30,7 +30,10 @@ def p_est_strongest_effect(
 
     # Find maximum effect accross all the stacked heatmaps
     avg_effects = group_level_effect(stacked_effects, axis=1)
-    max_effect = np.abs(avg_effects).max()
+    variance = stacked_effects.var(axis=1, ddof=1)     
+    effects = avg_effects / np.sqrt(variance)
+
+    max_effect = np.abs(effects).max()
 
     # Calculate power of that maximum effect
     power = calculate_power_fwer(

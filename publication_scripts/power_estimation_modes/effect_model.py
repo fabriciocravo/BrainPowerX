@@ -54,6 +54,17 @@ def draw_experiment_array(TE, n_subs, tau_mu, rng_np=None):
     return E
 
 
+def draw_experiement_variance(TE, n_subs, rng_np=None):
+
+    if rng_np is None:
+        rng_np = np.random.default_rng()
+
+    # The variance is a chi_squared dist
+    exp_variance = rng_np.chisquare(n_subs - 1, size=TE.shape) / (n_subs - 1)
+    return exp_variance
+
+
+
 def stack_subject_arrays(*subject_arrays):
     return np.concatenate(*subject_arrays, axis=0)
 

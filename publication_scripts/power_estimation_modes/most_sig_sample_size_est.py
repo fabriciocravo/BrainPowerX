@@ -1,10 +1,12 @@
 import numpy as np
 from group_planning_strats import (
-    group_p_est_strongest_effect
+    group_p_est_strongest_effect,
+    group_tp_strongest_effect
 )
 from effect_model import (
     draw_true_effects,
-    draw_experiment_array
+    draw_experiment_array,
+    draw_experiement_variance
 )
 from joblib import(
     Parallel, delayed
@@ -19,14 +21,16 @@ if __name__ == '__main__':
     TAU_A = 0.00088
     TAU_S = 1.0
     ESTIMATOR = group_p_est_strongest_effect
+    TRUE_ESTIMATOR = group_tp_strongest_effect
 
-    N_REPS = 10000
+    N_REPS = 1000
     SAMPLE_SIZES = np.unique(
         np.logspace(np.log10(10), np.log10(10000), num=60, dtype=int)
     )
 
     def sample_size_curve_estimation(
         group_estimator,
+        group_tp_estimator,
         n_variables,
         tau_A,
         tau_S,
@@ -52,7 +56,7 @@ if __name__ == '__main__':
 
         for i_s, n_sample in enumerate(sample_sizes):
 
-            true_power = group_estimator(
+            true_power = group_tp_estimator(
                 group_effect_array=true_effects,
                 n_variables=n_variables,
                 sample_size=n_sample
@@ -67,8 +71,15 @@ if __name__ == '__main__':
                 rng_np=rng_np
             )
 
+            subject_variance = draw_experiement_variance(
+                TE=true_effects,
+                n_subs=n_sample,
+                rng_np=rng_np
+            )
+
             power_estimation = group_estimator(
                 group_effect_array=subject_array,
+                group_variance_array=subject_variance,
                 n_variables=n_variables,
                 sample_size=n_sample,
             )
@@ -81,6 +92,7 @@ if __name__ == '__main__':
         n_jobs=5, backend='loky')(
         delayed(sample_size_curve_estimation)(
             group_estimator=ESTIMATOR,
+            group_tp_estimator=TRUE_ESTIMATOR,
             n_variables=N_VARIABLES,
             tau_A=TAU_A,
             tau_S=TAU_S,
