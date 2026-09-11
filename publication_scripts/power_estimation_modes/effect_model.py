@@ -54,6 +54,39 @@ def draw_experiment_array(TE, n_subs, tau_mu, rng_np=None):
     return E
 
 
+def draw_t_array_sub_level(seed_list, TE, n_subs, tau_mu):
+
+    rng_np = np.random.default_rng()
+    TE_b = TE + rng_np.normal(loc=0, scale=np.sqrt(tau_mu))
+
+    if len(seed_list) != n_subs:
+        raise TypeError(
+            'Function draw_experiment_array_sub_level'
+            'requires seeds equal to number of subjects'
+        )
+
+    mean = 0
+    M2 = 0
+    for i, seed in enumerate(seed_list):
+        rng_np = np.random.default_rng(seed)
+
+        x = rng_np.normal(loc=0, scale=1, size=TE.shape)
+        delta = x - mean
+        mean += delta/(i + 1)
+        delta_2 = x - mean
+        M2 += delta*delta_2
+
+    variance = M2/n_subs
+    mean_variance = variance / n_subs
+    
+    standardized_mean = mean / np.sqrt(mean_variance)
+
+    experiment_effects = TE_b + standardized_mean
+
+    return experiment_effects
+
+
+
 def draw_experiement_variance(TE, n_subs, rng_np=None):
 
     if rng_np is None:

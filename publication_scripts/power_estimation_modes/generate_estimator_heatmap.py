@@ -3,15 +3,13 @@ import matplotlib.pyplot as plt
 from study_planning_strats import (
     p_est_strongest_effect,
     p_est_average_significant_effect,
-    p_est_average_effect,
     p_est_subsampling_repetition,
     tp_strongest_effect,
     tp_average_significant_effect,
     estimate_true_power
 )
 from effect_model import (
-    draw_true_effects,
-    draw_subject_array,
+    draw_true_effects
 )
 from joblib import Parallel, delayed
 
@@ -54,41 +52,38 @@ def generate_estimator_comp_figure(
             n_sample
         )
 
-        def draw():
-            return draw_subject_array(
-                TE=TE,
-                n_subs=n_sample,
-                tau_mu=tau_M,
-                rng_np=rng_np
-            )
-
-        # Create stack of experiments
-        stack_full = np.stack([draw() for _ in range(max(k_values))])
+        subject_seed_array = rng_np.integers(
+            0, 2**32 - 1,
+            size=(max(k_values), n_sample)
+        )
 
         for k_idx, K in enumerate(k_values):
 
             results[i_s, k_idx] = estimator(
-                stack_full,
-                n_variables,
-                n_sample,
-                K
+                seed_array=subject_seed_array,
+                TE=TE,
+                n_variables=n_variables,
+                sample_size=n_sample,
+                tau_M=tau_M,
+                exp_number=K
             )
 
-    results_diff = np.abs(results - true_power[:, None])
+    results_diff = results - true_power[:, None]
 
     print(seed)
 
-    return results, results_diff
+    return results, results_diff, true_power
 
 
 def plot_curve_and_heatmap(
     results_mean,
     diff_mean,
+    true_power,
     ci_lower,
     ci_upper,
     sample_sizes,
     k_values,
-    k_curve,
+    n_curve,
     figsize=(12, 5),
 ):
     # Create figure and subplots
@@ -96,30 +91,27 @@ def plot_curve_and_heatmap(
     fig, (ax_curve, ax_heat) = plt.subplots(1, 2, figsize=figsize)
 
     # Get the index of subjects for the curve
-    n_idx = list(k_values).index(k_curve)
+    n_idx = list(sample_sizes).index(n_curve)
 
-    mean_vals = results_mean[:, n_idx]
-    yerr_lower = np.clip(mean_vals - ci_lower[:, n_idx], 0, 1)
-    yerr_upper = np.clip(ci_upper[:, n_idx] - mean_vals, 0, 1)
+    mean_vals = results_mean[n_idx, :]
+    yerr_lower = np.clip(mean_vals - ci_lower[n_idx, :], 0, 1)
+    yerr_upper = np.clip(ci_upper[n_idx, :] - mean_vals, 0, 1)
 
-    # Plot K versus error curve for select sample size
     ax_curve.errorbar(
-        sample_sizes,
+        k_values,
         mean_vals,
         yerr=[yerr_lower, yerr_upper],
         marker="o",
         capsize=4,
         label="Estimated power"
     )
-    ax_curve.set_xlabel("Number of Subjects")
+    ax_curve.set_xlabel("K (number of studies)")
     ax_curve.set_ylabel("Estimated power")
     ax_curve.set_ylim(0, 1)
-    ax_curve.set_title(f"Power estimation with K studies={k_curve}")
-
-    true_power = results_mean - diff_mean
+    ax_curve.set_title(f"Power estimation at N={n_curve}")
 
     ax_curve.axhline(
-        true_power[n_idx, 0],
+        true_power[n_idx],
         linestyle="--",
         color="k",
         label="True power"
@@ -167,8 +159,8 @@ def plot_curve_and_heatmap(
 
 if __name__ == "__main__":
 
-    ESTIMATOR = p_est_strongest_effect
-    # ESTIMATOR = p_est_average_significant_effect
+    # ESTIMATOR = p_est_strongest_effect
+    ESTIMATOR = p_est_average_significant_effect
     # ESTIMATOR = p_est_subsampling_repetition
 
     # - Recalculate this
@@ -179,14 +171,13 @@ if __name__ == "__main__":
     TAU_S = 1.0
     TAU_MU = 0
 
-    N_REPS = 10
-    SAMPLE_SIZES = [10, 20, 40, 80, 120]
-    K_VALUES = (1, 5, 10, 20, 40, 100)
+    N_REPS = 500
+    SAMPLE_SIZES = [10, 20, 40, 80]
+    K_VALUES = (1, 5, 10, 25, 50, 100)
 
     ESTIMATOR_TO_TRUE_POWER = {
         p_est_strongest_effect: tp_strongest_effect,
         p_est_average_significant_effect: tp_average_significant_effect,
-        p_est_average_effect: estimate_true_power,
         p_est_subsampling_repetition: estimate_true_power,
     }
     ESTIMATOR_TP = ESTIMATOR_TO_TRUE_POWER[ESTIMATOR]
@@ -196,7 +187,7 @@ if __name__ == "__main__":
     diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
 
     # Main loop - estimate power difference with LLN
-    results_list = Parallel(n_jobs=1)(
+    results_list = Parallel(n_jobs=10)(
         delayed(generate_estimator_comp_figure)(
             estimator=ESTIMATOR,
             true_power_estimator=ESTIMATOR_TP,
@@ -211,11 +202,14 @@ if __name__ == "__main__":
         for i in range(N_REPS)
     )
 
-    for results, results_diff in results_list:
+    true_power_sum = np.zeros(len(SAMPLE_SIZES))
+    for results, results_diff, tp in results_list:
         results_sum += results
         results_sq_sum += results ** 2
-        diff_sum += results_diff
+        diff_sum += np.abs(results_diff)
+        true_power_sum += tp
 
+    true_power_mean = true_power_sum / N_REPS
     results_mean = results_sum / N_REPS
     variance = (results_sq_sum / N_REPS) - results_mean ** 2
     std = np.sqrt(variance)
@@ -229,10 +223,11 @@ if __name__ == "__main__":
     fig, _ = plot_curve_and_heatmap(
         results_mean,
         diff_mean,
+        true_power_mean,
         ci_lower,
         ci_upper,
         SAMPLE_SIZES,
         K_VALUES,
-        k_curve=40,
+        n_curve=40,
     )
     plt.show()

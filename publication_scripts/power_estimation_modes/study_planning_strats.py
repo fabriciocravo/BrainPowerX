@@ -4,39 +4,60 @@ from scipy import stats
 
 from effect_model import (
     group_level_effect,
-    stack_subject_arrays
+    stack_subject_arrays,
+    draw_t_array_sub_level
 )
-
 from utils import (
-    edges_to_pvalues,
+    pvalues_from_t,
     p_values_true_effects,
     significance_map,
-    calculate_power_fwer
+    calculate_power_fwer,
+    calculate_t_power_fwer
 )
 
 
-def stack_eff(stacked_subject_array, exp_number):
-    return stacked_subject_array[:exp_number]
+def get_total_t_array(
+        seed_array,
+        TE,
+        n_subs,
+        tau_mu,
+        exp_number,
+):
+
+    def draw(i):
+        return draw_t_array_sub_level(
+            seed_list=seed_array[i],
+            TE=TE,
+            n_subs=n_subs,
+            tau_mu=tau_mu,
+        )
+
+    total_effect_array = [draw(i) for i in range(exp_number)]
+
+    return total_effect_array
 
 
 def p_est_strongest_effect(
-        stacked_subject_array,
+        seed_array,
+        TE,
         n_variables,
         sample_size,
+        tau_M,
         exp_number
 ):
 
-    stacked_effects = stack_eff(stacked_subject_array, exp_number)
+    total_t_array = get_total_t_array(
+        seed_array=seed_array,
+        TE=TE,
+        n_subs=sample_size,
+        tau_mu=tau_M,
+        exp_number=exp_number
+    )
 
-    # Find maximum effect accross all the stacked heatmaps
-    avg_effects = group_level_effect(stacked_effects, axis=1)
-    variance = stacked_effects.var(axis=1, ddof=1)     
-    effects = avg_effects / np.sqrt(variance)
+    max_effect = np.abs(total_t_array).max()
 
-    max_effect = np.abs(effects).max()
-
-    # Calculate power of that maximum effect
-    power = calculate_power_fwer(
+    # Calculate power of that maximum t-stat
+    power = calculate_t_power_fwer(
         max_effect,
         n_variables,
         sample_size
@@ -63,60 +84,31 @@ def tp_strongest_effect(
     return power
 
 
-def p_est_smallest_significant_effect(
-        stacked_subject_array,
+def p_est_average_significant_effect(
+        seed_array,
+        TE,
         n_variables,
         sample_size,
+        tau_M,
         exp_number
 ):
 
-    stacked_effects = stack_eff(stacked_subject_array, exp_number)
-
-    min_sig = []
-    for e in stacked_effects:
-        # Across each heatmap find all significant effects
-        r = significance_map(edges_to_pvalues(e, sample_size), n_variables)
-
-        # For each heatmap find the minimum significant effect
-        if r.any():
-            avg_e = group_level_effect(e, axis=0)
-            min_sig.append(avg_e[r].min())
-
-    if not min_sig:
-        raise ValueError(
-            'The power estimation using max '
-            'significant effect did not return anything'
-        )
-
-    # Over K draws find the maximum minimum significant effect
-    worst_min_sig = np.max(min_sig)
-
-    # Calculate power based on the maximum minimum signifcant effect
-    return calculate_power_fwer(
-        e_mat=worst_min_sig,
-        n_variables=n_variables,
-        N=sample_size
+    total_t_array = get_total_t_array(
+        seed_array=seed_array,
+        TE=TE,
+        n_subs=sample_size,
+        tau_mu=tau_M,
+        exp_number=exp_number
     )
 
-
-def p_est_average_significant_effect(
-        stacked_subject_array,
-        n_variables,
-        sample_size,
-        exp_number
-):
-
-    stacked_effects = stack_eff(stacked_subject_array, exp_number)
-
     avg_sig = []
-    for e in stacked_effects:
+    for t in total_t_array:
         # Across each draw find all significant effects
-        r = significance_map(edges_to_pvalues(e, sample_size), n_variables)
+        r = significance_map(pvalues_from_t(t, sample_size), n_variables)
 
         # For each draw, find the average significant effect
         if r.any():
-            avg_e = group_level_effect(e, axis=0)
-            avg_sig.append(np.abs(avg_e[r]).mean())
+            avg_sig.append(np.abs(t[r]).mean())
 
     if not avg_sig:
         # Define power of non significance as zero
@@ -126,7 +118,7 @@ def p_est_average_significant_effect(
     mean_sig = np.max(avg_sig)
 
     # Calculate power based on the average significant effect
-    power = calculate_power_fwer(
+    power = calculate_t_power_fwer(
         mean_sig,
         n_variables,
         sample_size
@@ -153,35 +145,9 @@ def tp_average_significant_effect(
     return powers.mean()
 
 
-def p_est_average_effect(
-        stacked_subject_array,
-        n_variables,
-        sample_size,
-        exp_number
-):
-
-    stacked_effects = stack_eff(stacked_subject_array, exp_number)
-
-    # For each heatmap - calculate average power
-    all_means = []
-    for e in stacked_effects:
-        e = group_level_effect(e, axis=0)
-        mean = np.abs(e).mean()
-        all_means.append(mean)
-
-    # Over K draws find the maximum absolute effect
-    max_mean = np.asarray(all_means).max()
-
-    power = calculate_power_fwer(
-        max_mean,
-        n_variables,
-        sample_size
-    )
-    return power
-
-
 def p_est_subsampling_repetition(
-    stacked_subject_array,
+    seed_array,
+    TE,
     n_variables,
     sample_size,
     exp_number,
@@ -193,10 +159,16 @@ def p_est_subsampling_repetition(
     if rng_np is None:
         rng_np = np.random.default_rng()
 
-    pooled_subjects = stack_subject_arrays(stacked_subject_array[:exp_number])
+    # unpack all seeds - all subjects are used here
+    pooled_seeds = np.concatenate(
+        seed_array[:exp_number],
+        axis=0
+    )
 
-    # Get total dataset size
-    data_set_size = pooled_subjects.shape[0]
+    # pool the subjects
+    chosen_seeds = pooled_seeds[
+        rng_np.integers(pooled_seeds.shape[0], size=sample_size)
+    ]
 
     # Start empty counting matrix
     p_matrix = np.zeros(n_variables, dtype=float)
@@ -205,13 +177,23 @@ def p_est_subsampling_repetition(
     # For each n_rep chose a map at random
     for _ in range(n_rep):
   
-        exp = pooled_subjects[
-            rng_np.integers(data_set_size, size=sample_size)
+        chosen_seeds = pooled_seeds[
+            rng_np.integers(
+                pooled_seeds.shape[0],
+                size=sample_size
+            )
         ]
 
+        t_exp = draw_t_array_sub_level(
+            seed_list=chosen_seeds,
+            TE=TE,
+            n_subs=sample_size,
+            tau_mu=0
+        )
+
         # Detect which edges are significant
-        sig = significance_map(edges_to_pvalues(
-            exp,
+        sig = significance_map(pvalues_from_t(
+            t_exp,
             sample_size),
             n_variables
         )

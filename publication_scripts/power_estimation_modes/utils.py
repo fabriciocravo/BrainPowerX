@@ -18,6 +18,12 @@ def edges_to_pvalues(exp, N):
     return p_mat
 
 
+def pvalues_from_t(t_stat, sample_size):
+    df = sample_size - 1
+    p = 2 * stats.t.sf(np.abs(t_stat), df)
+    return p
+
+
 def edges_to_pvalues_from_experiment(E, N):
     z_stat = np.sqrt(N) * E  # Assume known subject variance
     p_mat = 2 * stats.norm.sf(np.abs(z_stat))
@@ -66,3 +72,23 @@ def calculate_power_fwer(
 
     return pow_upper + pow_lower
 
+
+def calculate_t_power_fwer(
+        t_mat,
+        n_variables,
+        N,
+        alpha=0.05
+):
+
+    # Two-sided critical value: alpha/n_variables split across both tails
+    t_crit = stats.t.ppf(1 - alpha/(2*n_variables), N-1)
+
+    # Primary tail (Survival function)
+    pow_upper = stats.nct.sf(t_crit, N - 1, t_mat)
+    pow_upper = np.where(np.isnan(pow_upper), 1.0, pow_upper)
+
+    # Opposite tail (CDF) - fill numerical precision NaNs with 0.0
+    pow_lower = stats.nct.cdf(-t_crit, N - 1, t_mat)
+    pow_lower = np.where(np.isnan(pow_lower), 0.0, pow_lower)
+
+    return pow_upper + pow_lower
