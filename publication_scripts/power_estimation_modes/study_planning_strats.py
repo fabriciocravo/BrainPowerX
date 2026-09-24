@@ -3,9 +3,8 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 from effect_model import (
-    group_level_effect,
-    stack_subject_arrays,
-    draw_t_array_sub_level
+    draw_t_array_sub_level,
+    draw_t_array_group_level
 )
 from utils import (
     pvalues_from_t,
@@ -16,6 +15,7 @@ from utils import (
 )
 
 
+# Slower and more accurate
 def get_total_t_array(
         seed_array,
         TE,
@@ -84,15 +84,16 @@ def tp_strongest_effect(
     return power
 
 
-def p_est_average_significant_effect(
+def p_est_effect_number(
         seed_array,
         TE,
         n_variables,
         sample_size,
         tau_M,
-        exp_number
+        exp_number,
+        effect_number=100,
 ):
-
+    
     total_t_array = get_total_t_array(
         seed_array=seed_array,
         TE=TE,
@@ -101,25 +102,11 @@ def p_est_average_significant_effect(
         exp_number=exp_number
     )
 
-    avg_sig = []
-    for t in total_t_array:
-        # Across each draw find all significant effects
-        r = significance_map(pvalues_from_t(t, sample_size), n_variables)
+    top_effect_array = np.sort(np.abs(total_t_array))[-effect_number:]
 
-        # For each draw, find the average significant effect
-        if r.any():
-            avg_sig.append(np.abs(t[r]).mean())
-
-    if not avg_sig:
-        # Define power of non significance as zero
-        return 0
-
-    # Over K draws, get the maximum over the means.
-    mean_sig = np.max(avg_sig)
-
-    # Calculate power based on the average significant effect
+    # Calculate power of that maximum t-stat
     power = calculate_t_power_fwer(
-        mean_sig,
+        top_effect_array,
         n_variables,
         sample_size
     )
@@ -127,22 +114,23 @@ def p_est_average_significant_effect(
     return power
 
 
-def tp_average_significant_effect(
+def tp_effect_number(
         TE,
         n_variables,
-        sample_size
+        sample_size,
+        effect_number,
 ):
+    # Getting max true effect
+    top_eff = np.sort(np.abs(TE))[-effect_number:]
 
-    p_vals = p_values_true_effects(TE, sample_size)
-    sig_map = significance_map(p_vals, n_variables)
+    # Calculate power of that maximum effect
+    power = calculate_power_fwer(
+        top_eff,
+        n_variables,
+        sample_size
+    )
 
-    effects = TE[sig_map]
-
-    if effects.size == 0:
-        return 0
-
-    powers = calculate_power_fwer(effects, n_variables, sample_size)
-    return powers.mean()
+    return power
 
 
 def p_est_subsampling_repetition(
@@ -150,11 +138,15 @@ def p_est_subsampling_repetition(
     TE,
     n_variables,
     sample_size,
+    tau_M,
     exp_number,
     n_rep=100,
     return_full_matrix=False,
     rng_np=None
 ):
+
+    if tau_M != 0:
+        raise ValueError("This function does not support tau_M != 0")
 
     if rng_np is None:
         rng_np = np.random.default_rng()

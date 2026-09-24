@@ -160,8 +160,8 @@ def plot_curve_and_heatmap(
 if __name__ == "__main__":
 
     # ESTIMATOR = p_est_strongest_effect
-    ESTIMATOR = p_est_average_significant_effect
-    # ESTIMATOR = p_est_subsampling_repetition
+    # ESTIMATOR = p_est_average_significant_effect
+    ESTIMATOR = p_est_subsampling_repetition
 
     # - Recalculate this
     SEED = 20260724

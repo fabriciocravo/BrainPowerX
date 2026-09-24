@@ -86,7 +86,6 @@ def draw_t_array_sub_level(seed_list, TE, n_subs, tau_mu):
     return experiment_effects
 
 
-
 def draw_experiement_variance(TE, n_subs, rng_np=None):
 
     if rng_np is None:
@@ -96,6 +95,22 @@ def draw_experiement_variance(TE, n_subs, rng_np=None):
     exp_variance = rng_np.chisquare(n_subs - 1, size=TE.shape) / (n_subs - 1)
     return exp_variance
 
+
+def draw_t_array_group_level(TE, n_subs, tau_mu):
+    rng_np = np.random.default_rng()
+
+    # experiment-level true effect after between-experiment heterogeneity
+    TE_b = TE + rng_np.normal(loc=0, scale=np.sqrt(tau_mu))
+
+    # noncentrality parameter for a one-sample t-test
+    ncp = TE_b * np.sqrt(n_subs)
+
+    z = rng_np.normal(loc=0, scale=1, size=TE.shape)
+
+    exp_variance = draw_experiement_variance(TE, n_subs, rng_np)
+
+    experiment_effects = (ncp + z) / np.sqrt(exp_variance)
+    return experiment_effects
 
 
 def stack_subject_arrays(*subject_arrays):

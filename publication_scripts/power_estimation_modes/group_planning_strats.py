@@ -35,13 +35,13 @@ def group_p_est_strongest_effect(
 
 
 def group_tp_strongest_effect(
-        group_effect_array,
+        TE,
         n_variables,
         sample_size,
 ):
 
     # Find maximum effect accross the group effect array
-    max_effect = np.abs(group_effect_array).max()
+    max_effect = np.abs(TE).max()
 
     # Calculate power of that maximum effect
     power = calculate_power_fwer(
@@ -53,33 +53,41 @@ def group_tp_strongest_effect(
     return power
 
 
-def group_p_est_average_significant_effect(
+def group_p_effect_number(
         group_effect_array,
         group_variance_array,
         n_variables,
         sample_size,
+        effect_number=100
 ):
 
-    raise TypeError('Function not yet completed')
-
-    # Across each draw find all significant effects
-    r = significance_map(
-        edges_to_pvalues(group_effect_array, sample_size),
-        n_variables
-    )
-
-    # For each draw, find the average significant effect
-    if r.any():
-        avg_e = group_level_effect(group_effect_array, axis=0)
-        avg_sig = np.abs(avg_e[r]).mean()
-
-    if not avg_sig:
-        # Define power of non significance as zero
-        return 0
-
+    # Adjust effects according to new variance
+    effect_est = group_effect_array/np.sqrt(group_variance_array)
+    top_group_effects = np.sort(np.abs(effect_est))[-100:]
+    
     # Calculate power based on the average significant effect
     power = calculate_power_fwer(
-        avg_sig,
+        top_group_effects,
+        n_variables,
+        sample_size
+    )
+
+    return power
+
+
+def group_tp_effect_number(
+        TE,
+        n_variables,
+        sample_size,
+        effect_number=100
+):
+
+    # Find maximum effect accross the group effect array
+    top_effects = np.sorted(np.abs(TE))[-effect_number:]
+
+    # Calculate power of that maximum effect
+    power = calculate_power_fwer(
+        top_effects,
         n_variables,
         sample_size
     )
