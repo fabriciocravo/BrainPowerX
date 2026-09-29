@@ -2,111 +2,57 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-from effect_model import (
-    draw_true_effects,
-    draw_t_array_group_level
+from true_effect_models import (
+    normal_true_effects
 )
-from utils import (
-    pvalues_from_t,
-    significance_map,
-    calculate_power_fwer,
-    calculate_t_power_fwer
+from significance_planning_strats import (
+    p_sig_strongest_effect,
+    p_sig_average_significant_effect
 )
 from joblib import(
     Parallel,
     delayed
 )
 
-# Faster and draws directly from grup distributions
-# Since it's used for multiple repeated draws, it takes no seed
-def get_exp_t_array(
-        TE,
-        n_subs,
-        tau_mu,
-):
-    
-    return draw_t_array_group_level(
-        TE=TE,
-        n_subs=n_subs,
-        tau_mu=tau_mu
+
+# Script Parameters ###########################
+N_NODES = 268
+N_VARIABLES = N_NODES * (N_NODES - 1) // 2
+
+# Normal model ###########################
+TAU_A = 0.00088
+TAU_S = 1.0
+TAU_MU = 0
+
+
+def TE_normal(n_var, rng):
+    return normal_true_effects(
+        n_variables=n_var,
+        tau_A=TAU_A,
+        tau_S=TAU_S,
+        rng_np=rng
     )
 
 
-# The power for the significant effect is a little different
-# Since only significant effects count:
-# True power and emperical power must be computed at the same time
-def p_average_significant_effect(
-        TE,
-        n_variables,
-        sample_size,
-        tau_M,
-        exp_number,
-        max_iteration=10000
-):
-
-    avg_sig = []
-    te_sig = []
-
-    i_b = 0
-    while len(avg_sig) != exp_number and i_b < max_iteration*exp_number:
-        i_b += 1
-
-        t_array = get_exp_t_array(
-            TE=TE,
-            n_subs=sample_size,
-            tau_mu=tau_M,
-        )
-
-        # Across each draw find all significant effects
-        r = significance_map(
-            pvalues_from_t(t_array, sample_size),
-            n_variables
-        )
-
-        # For each draw, find the average significant effect
-        if r.any():
-            avg_sig.append(np.abs(t_array[r]).mean())
-            te_sig.append(np.abs(TE[r]).mean())
-    
-    if i_b == max_iteration*exp_number:
-        power = 0
-        true_power = 0
-        return power, true_power
-
-    # Over K draws, get the maximum over the means.
-    i_max = np.argmax(avg_sig)
-    max_mean = avg_sig[i_max]
-    tp_mean = te_sig[i_max]
-
-    # Calculate power based on the average significant effect
-    power = calculate_t_power_fwer(
-        max_mean,
-        n_variables,
-        sample_size
-    )
-
-    true_power = calculate_power_fwer(
-        tp_mean,
-        n_variables,
-        sample_size
-    )
-
-    return power, true_power
+######################################
+N_REPS = 500
+SAMPLE_SIZES = [10, 20, 40, 80, 120]
+ALPHA_VALUES = (0.10, 0.05, 0.01, 0.001)
 
 
 def significance_heamap_cuve(
+        TE_model,
+        estimator,
         n_variables,
-        tau_A,
-        tau_S,
-        tau_M,
-        k_values,
         sample_sizes,
+        alpha_v_list,
+        max_sig_iteraction=10000,
         seed=None
 ):
 
     # Create np array with columns (n3 vs n K values)
-    results = np.zeros((len(sample_sizes), len(k_values)))
-    true_power = np.zeros((len(sample_sizes), len(k_values)))
+    results = np.zeros((len(sample_sizes), len(alpha_v_list)))
+    true_power = np.zeros((len(sample_sizes), len(alpha_v_list)))
 
     if seed is not None:
         rng_np = np.random.default_rng(seed)
@@ -114,26 +60,21 @@ def significance_heamap_cuve(
         rng_np = np.random.default_rng()
 
     # Draw true effects
-    TE = draw_true_effects(
-        n_variables=n_variables,
-        tau_A=tau_A,
-        tau_S=tau_S,
-        rng_np=rng_np
-    )
+    TE = TE_model(n_variables, rng_np)
 
     for i_s, n_sample in enumerate(sample_sizes):
-        for k_idx, K in enumerate(k_values):
+        for a_idx, alpha in enumerate(alpha_v_list):
 
-            results[i_s, k_idx], true_power[i_s, k_idx] = \
-                p_average_significant_effect(
-                    TE=TE,
+            results[i_s, a_idx], true_power[i_s, a_idx] = \
+                estimator(
+                    TE,
                     n_variables=n_variables,
                     sample_size=n_sample,
-                    tau_M=tau_M,
-                    exp_number=K
+                    alpha=alpha,
+                    max_sig_iteration=max_sig_iteraction
                 )
 
-    results_diff = results - true_power
+    results_diff = np.abs(results - true_power)
 
     print(seed)
 
@@ -147,7 +88,7 @@ def plot_curve_and_heatmap(
     ci_lower,
     ci_upper,
     sample_sizes,
-    k_values,
+    alpha_values,
     n_curve,
     figsize=(12, 5),
 ):
@@ -164,7 +105,7 @@ def plot_curve_and_heatmap(
     yerr_upper = np.clip(ci_upper[n_idx, :] - mean_vals, 0, 1)
 
     ax_curve.errorbar(
-        k_values,
+        alpha_values,
         mean_vals,
         yerr=[yerr_lower, yerr_upper],
         marker="o",
@@ -177,7 +118,7 @@ def plot_curve_and_heatmap(
     ax_curve.set_title(f"Power estimation at N={n_curve}")
 
     ax_curve.plot(
-        k_values,
+        alpha_values,
         true_power[n_idx, :],
         linestyle="--",
         marker="s",
@@ -199,11 +140,11 @@ def plot_curve_and_heatmap(
 
     n_rows, n_cols = diff_mean.shape
 
-    ax_heat.set_xticks(range(len(k_values)))
-    ax_heat.set_xticklabels(k_values)
+    ax_heat.set_xticks(range(len(alpha_values)))
+    ax_heat.set_xticklabels(alpha_values)
     ax_heat.set_yticks(range(len(sample_sizes)))
     ax_heat.set_yticklabels(sample_sizes)
-    ax_heat.set_xlabel("K")
+    ax_heat.set_xlabel(r"\alpha")
     ax_heat.set_ylabel("N")
     ax_heat.set_title("Estimated − True power")
 
@@ -268,38 +209,26 @@ def sigficance_power_error_vs_sample_size(
     return power_error
 
 
-def gen_heat_map():
+def gen_heat_map(TE_model, estimator):
 
-    # Gen heat map parameters
-    N_NODES = 268
-    N_VARIABLES = N_NODES * (N_NODES - 1) // 2
-    TAU_A = 0.00088
-    TAU_S = 1.0
-    TAU_MU = 0
-
-    N_REPS = 500
-    SAMPLE_SIZES = [10, 20, 40, 80]
-    K_VALUES = (1, 5, 10, 25, 50, 100)
-
-    results_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
-    results_sq_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
-    diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
+    results_sum = np.zeros((len(SAMPLE_SIZES), len(ALPHA_VALUES)))
+    results_sq_sum = np.zeros((len(SAMPLE_SIZES), len(ALPHA_VALUES)))
+    diff_sum = np.zeros((len(SAMPLE_SIZES), len(ALPHA_VALUES)))
 
     # Main loop - estimate power difference with LLN
     results_list = Parallel(n_jobs=10)(
         delayed(significance_heamap_cuve)(
+            TE_model=TE_model,
+            estimator=estimator,
             n_variables=N_VARIABLES,
-            tau_A=TAU_A,
-            tau_S=TAU_S,
-            tau_M=TAU_MU,
-            k_values=K_VALUES,
+            alpha_v_list=ALPHA_VALUES,
             sample_sizes=SAMPLE_SIZES,
             seed=i,
         )
         for i in range(N_REPS)
     )
 
-    true_power_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
+    true_power_sum = np.zeros((len(SAMPLE_SIZES), len(ALPHA_VALUES)))
     for results, results_diff, tp in results_list:
         results_sum += results
         results_sq_sum += results ** 2
@@ -324,13 +253,13 @@ def gen_heat_map():
         ci_lower,
         ci_upper,
         SAMPLE_SIZES,
-        K_VALUES,
+        ALPHA_VALUES,
         n_curve=40,
     )
     plt.show()
 
 
-def gen_sample_size_curve():
+def gen_sample_size_curve(TE_model, estimator):
 
     # Sample size curve parameters
     N_NODES = 268
@@ -380,4 +309,5 @@ def gen_sample_size_curve():
 
 if __name__ == "__main__":
 
+    gen_heat_map(TE_normal, p_sig_strongest_effect)
     pass
