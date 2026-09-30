@@ -177,7 +177,6 @@ if __name__ == "__main__":
 
     ESTIMATOR_TO_TRUE_POWER = {
         p_est_strongest_effect: tp_strongest_effect,
-        p_est_average_significant_effect: tp_average_significant_effect,
         p_est_subsampling_repetition: estimate_true_power,
     }
     ESTIMATOR_TP = ESTIMATOR_TO_TRUE_POWER[ESTIMATOR]

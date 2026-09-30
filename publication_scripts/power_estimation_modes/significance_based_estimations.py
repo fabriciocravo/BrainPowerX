@@ -35,7 +35,7 @@ def TE_normal(n_var, rng):
 
 
 ######################################
-N_REPS = 500
+N_REPS = 1000
 SAMPLE_SIZES = [10, 20, 40, 80, 120]
 ALPHA_VALUES = (0.10, 0.05, 0.01, 0.001)
 
@@ -46,7 +46,7 @@ def significance_heamap_cuve(
         n_variables,
         sample_sizes,
         alpha_v_list,
-        max_sig_iteraction=10000,
+        max_sig_iteration=10000,
         seed=None
 ):
 
@@ -71,7 +71,7 @@ def significance_heamap_cuve(
                     n_variables=n_variables,
                     sample_size=n_sample,
                     alpha=alpha,
-                    max_sig_iteration=max_sig_iteraction
+                    max_sig_iteration=max_sig_iteration
                 )
 
     results_diff = np.abs(results - true_power)
@@ -112,7 +112,8 @@ def plot_curve_and_heatmap(
         capsize=4,
         label="Estimated power"
     )
-    ax_curve.set_xlabel("K (number of studies)")
+    ax_curve.set_xlabel(r"Significance Alpha $\alpha$")
+    ax_curve.invert_xaxis()
     ax_curve.set_ylabel("Estimated power")
     ax_curve.set_ylim(0, 1)
     ax_curve.set_title(f"Power estimation at N={n_curve}")
@@ -144,7 +145,7 @@ def plot_curve_and_heatmap(
     ax_heat.set_xticklabels(alpha_values)
     ax_heat.set_yticks(range(len(sample_sizes)))
     ax_heat.set_yticklabels(sample_sizes)
-    ax_heat.set_xlabel(r"\alpha")
+    ax_heat.set_xlabel(r"$\alpha$")
     ax_heat.set_ylabel("N")
     ax_heat.set_title("Estimated − True power")
 
@@ -167,27 +168,22 @@ def plot_curve_and_heatmap(
 
 
 def sigficance_power_error_vs_sample_size(
+        TE_model,
+        estimator,
         n_variables,
-        tau_A,
-        tau_S,
-        tau_M,
         sample_sizes,
+        max_sig_iteration=10000,
         seed=None
 ):
     
-
+    # Model the error in the power estimation versus the sample size
     if seed is not None:
         rng_np = np.random.default_rng(seed)
     else:
         rng_np = np.random.default_rng()
 
     # Draw true effects
-    true_effects = draw_true_effects(
-        n_variables=n_variables,
-        tau_A=tau_A,
-        tau_S=tau_S,
-        rng_np=rng_np
-    )
+    TE = TE_model(n_variables, rng_np)
 
     power_error = np.zeros((len(sample_sizes)))
     true_power = np.zeros((len(sample_sizes)))
@@ -196,12 +192,12 @@ def sigficance_power_error_vs_sample_size(
     for i_s, n_sample in enumerate(sample_sizes):
 
         results[i_s], true_power[i_s] = \
-            p_average_significant_effect(
-                TE=true_effects,
+            estimator(
+                TE,
                 n_variables=n_variables,
                 sample_size=n_sample,
-                tau_M=tau_M,
-                exp_number=1
+                alpha=0.05,
+                max_sig_iteration=max_sig_iteration
             )
 
         power_error[i_s] = np.abs(true_power[i_s] - results[i_s])
@@ -309,5 +305,5 @@ def gen_sample_size_curve(TE_model, estimator):
 
 if __name__ == "__main__":
 
-    gen_heat_map(TE_normal, p_sig_strongest_effect)
+    gen_heat_map(TE_normal, p_sig_average_significant_effect)
     pass

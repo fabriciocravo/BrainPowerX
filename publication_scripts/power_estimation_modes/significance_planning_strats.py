@@ -36,8 +36,6 @@ def first_significant_experiment(
 ):
 
     i_b = 0
-    max_so_far = 0
-    max_array = 0
     while i_b < max_sig_iteration:
         i_b += 1
 
@@ -53,15 +51,12 @@ def first_significant_experiment(
             alpha=alpha
         )
 
-        if max(np.abs(t_array)) > max_so_far:
-            max_so_far = max(np.abs(t_array))
-            max_array = t_array
-
         if r.any():
             return t_array, r
  
-    # Truncate to max array if no significance found
-    return max_array, None
+    # Just return something with None - there will be some error here
+    # if max_sig_iteration is low enough
+    return t_array, None
 
 
 # Power of strongest effect sizes with only sig studies
@@ -70,7 +65,7 @@ def p_sig_strongest_effect(
     n_variables,
     sample_size,
     alpha,
-    max_sig_iteraction=10000
+    max_sig_iteration=10000
 ):
 
     t_sig_array, _ = first_significant_experiment(
@@ -78,11 +73,11 @@ def p_sig_strongest_effect(
         n_variables,
         sample_size,
         alpha,
-        max_sig_iteraction
+        max_sig_iteration
     )
 
     t_max = np.max(t_sig_array)
-    te_max = np.max(t_sig_array)
+    te_max = np.max(TE)
 
     # Calculate power based on the average significant effect
     power = calculate_t_power_fwer(
@@ -108,7 +103,7 @@ def p_sig_average_significant_effect(
         n_variables,
         sample_size,
         alpha,
-        max_sig_iteraction=10000
+        max_sig_iteration=10000
 ):
 
     avg_sig = []
@@ -119,7 +114,7 @@ def p_sig_average_significant_effect(
         n_variables,
         sample_size,
         alpha,
-        max_sig_iteraction
+        max_sig_iteration
     )
 
     # For each draw, find the average significant effect
@@ -127,7 +122,7 @@ def p_sig_average_significant_effect(
         avg_sig = np.abs(t_sig_array[r]).mean()
         te_sig = np.abs(TE[r]).mean()
     else:
-        Warning('Consider raising max_sig_iteraction')
+        Warning('Consider raising max_sig_iteration')
         power = 0
         true_power = 0
         return power, true_power
