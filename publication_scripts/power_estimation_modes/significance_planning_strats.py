@@ -77,7 +77,7 @@ def p_sig_strongest_effect(
     )
 
     t_max = np.max(t_sig_array)
-    te_max = np.max(TE)
+    te_max = np.max()
 
     # Calculate power based on the average significant effect
     power = calculate_t_power_fwer(

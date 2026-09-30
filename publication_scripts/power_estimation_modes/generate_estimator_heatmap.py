@@ -8,19 +8,17 @@ from study_planning_strats import (
     tp_average_significant_effect,
     estimate_true_power
 )
-from effect_model import (
+from true_effect_models import (
     draw_true_effects
 )
 from joblib import Parallel, delayed
 
 
 def generate_estimator_comp_figure(
+        TE_model,
         estimator,
         true_power_estimator,
         n_variables,
-        tau_A,
-        tau_S,
-        tau_M,
         k_values,
         sample_sizes,
         seed=None
