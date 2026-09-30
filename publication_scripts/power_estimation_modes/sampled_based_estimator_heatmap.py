@@ -1,15 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from study_planning_strats import (
-    p_est_strongest_effect,
-    p_est_average_significant_effect,
     p_est_subsampling_repetition,
-    tp_strongest_effect,
-    tp_average_significant_effect,
     estimate_true_power
 )
 from true_effect_models import (
-    draw_true_effects
+    normal_true_effects
 )
 from joblib import Parallel, delayed
 
@@ -17,7 +13,6 @@ from joblib import Parallel, delayed
 def generate_estimator_comp_figure(
         TE_model,
         estimator,
-        true_power_estimator,
         n_variables,
         k_values,
         sample_sizes,
@@ -34,17 +29,12 @@ def generate_estimator_comp_figure(
         rng_np = np.random.default_rng()
 
     # Draw true effects
-    TE = draw_true_effects(
-        n_variables=n_variables,
-        tau_A=tau_A,
-        tau_S=tau_S,
-        rng_np=rng_np
-    )
+    TE = TE_model(n_variables, rng_np=rng_np)
 
     for i_s, n_sample in enumerate(sample_sizes):
 
         # Deterministic given TE and n_sample -> compute once
-        true_power[i_s] = true_power_estimator(
+        true_power[i_s] = estimate_true_power(
             TE,
             n_variables,
             n_sample
@@ -62,7 +52,6 @@ def generate_estimator_comp_figure(
                 TE=TE,
                 n_variables=n_variables,
                 sample_size=n_sample,
-                tau_M=tau_M,
                 exp_number=K
             )
 
@@ -157,8 +146,6 @@ def plot_curve_and_heatmap(
 
 if __name__ == "__main__":
 
-    # ESTIMATOR = p_est_strongest_effect
-    # ESTIMATOR = p_est_average_significant_effect
     ESTIMATOR = p_est_subsampling_repetition
 
     # - Recalculate this
@@ -169,29 +156,38 @@ if __name__ == "__main__":
     TAU_S = 1.0
     TAU_MU = 0
 
-    N_REPS = 500
-    SAMPLE_SIZES = [10, 20, 40, 80]
-    K_VALUES = (1, 5, 10, 25, 50, 100)
+    # TE model
+    def TE_normal(n_var, rng):
+        return normal_true_effects(
+            n_variables=n_var,
+            tau_A=TAU_A,
+            tau_S=TAU_S,
+            rng_np=rng
+        )
 
-    ESTIMATOR_TO_TRUE_POWER = {
-        p_est_strongest_effect: tp_strongest_effect,
-        p_est_subsampling_repetition: estimate_true_power,
-    }
-    ESTIMATOR_TP = ESTIMATOR_TO_TRUE_POWER[ESTIMATOR]
+    N_REPS = 10
+    SAMPLE_SIZES = [10, 20, 40, 80, 120]
+    K_VALUES = (1, 5, 10, 25)
 
     results_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     results_sq_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
+    '''
+        TE_model,
+        estimator,
+        n_variables,
+        k_values,
+        sample_sizes,
+        seed=None
+    ):
+    '''
 
     # Main loop - estimate power difference with LLN
     results_list = Parallel(n_jobs=10)(
         delayed(generate_estimator_comp_figure)(
+            TE_model=TE_normal,
             estimator=ESTIMATOR,
-            true_power_estimator=ESTIMATOR_TP,
             n_variables=N_VARIABLES,
-            tau_A=TAU_A,
-            tau_S=TAU_S,
-            tau_M=TAU_MU,
             k_values=K_VALUES,
             sample_sizes=SAMPLE_SIZES,
             seed=i,
