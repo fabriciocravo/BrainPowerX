@@ -52,11 +52,11 @@ def first_significant_experiment(
         )
 
         if r.any():
-            return t_array, r
+            return t_array, r, i_b
  
     # Just return something with None - there will be some error here
     # if max_sig_iteration is low enough
-    return t_array, None
+    return t_array, None, max_sig_iteration
 
 
 # Power of strongest effect sizes with only sig studies
@@ -68,7 +68,7 @@ def p_sig_strongest_effect(
     max_sig_iteration=10000
 ):
 
-    t_sig_array, _ = first_significant_experiment(
+    t_sig_array, _, _ = first_significant_experiment(
         TE,
         n_variables,
         sample_size,
@@ -77,7 +77,7 @@ def p_sig_strongest_effect(
     )
 
     t_max = np.max(t_sig_array)
-    te_max = np.max()
+    te_max = np.max(TE)
 
     # Calculate power based on the average significant effect
     power = calculate_t_power_fwer(
@@ -109,7 +109,7 @@ def p_sig_average_significant_effect(
     avg_sig = []
     te_sig = []
 
-    t_sig_array, r = first_significant_experiment(
+    t_sig_array, r, _ = first_significant_experiment(
         TE,
         n_variables,
         sample_size,

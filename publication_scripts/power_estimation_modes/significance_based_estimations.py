@@ -257,15 +257,6 @@ def gen_heat_map(TE_model, estimator):
 
 def gen_sample_size_curve(TE_model, estimator):
 
-    # Sample size curve parameters
-    N_NODES = 268
-    N_VARIABLES = N_NODES * (N_NODES - 1) // 2
-    TAU_A = 0.00088
-    TAU_S = 1.0
-
-    N_REPS = 500
-    SAMPLE_SIZES = [10, 20, 40, 80]
-
     subsample_lists = Parallel(
         n_jobs=5, backend='loky')(
         delayed(sigficance_power_error_vs_sample_size)(

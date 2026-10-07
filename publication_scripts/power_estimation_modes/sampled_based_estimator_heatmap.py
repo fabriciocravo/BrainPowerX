@@ -16,9 +16,10 @@ def generate_estimator_comp_figure(
         n_variables,
         k_values,
         sample_sizes,
+        quantile=1,
         seed=None
 ):
-    
+
     # Create np array with columns (n3 vs n K values)
     results = np.zeros((len(sample_sizes), len(k_values)))
     true_power = np.zeros(len(sample_sizes))
@@ -29,17 +30,23 @@ def generate_estimator_comp_figure(
         rng_np = np.random.default_rng()
 
     # Draw true effects
-    TE = TE_model(n_variables, rng_np=rng_np)
+    TE = TE_model(n_variables, rng=rng_np)
+    # Percentage of variables to keep
+    n_keep = max(1, int(np.ceil(quantile * len(TE))))
 
     for i_s, n_sample in enumerate(sample_sizes):
+        
+        # true_power[i_s]
 
         # Deterministic given TE and n_sample -> compute once
-        true_power[i_s] = estimate_true_power(
+        power_vec = estimate_true_power(
             TE,
             n_variables,
-            n_sample
+            n_sample,
+            return_full_matrix=True
         )
-
+        true_power[i_s] = np.sort(power_vec)[-n_keep:].mean()
+        
         subject_seed_array = rng_np.integers(
             0, 2**32 - 1,
             size=(max(k_values), n_sample)
@@ -47,15 +54,17 @@ def generate_estimator_comp_figure(
 
         for k_idx, K in enumerate(k_values):
 
-            results[i_s, k_idx] = estimator(
+            results_vec = estimator(
                 seed_array=subject_seed_array,
                 TE=TE,
                 n_variables=n_variables,
                 sample_size=n_sample,
-                exp_number=K
+                exp_number=K,
+                return_full_matrix=True
             )
+            results[i_s, k_idx] = np.sort(results_vec)[-n_keep:].mean()
 
-    results_diff = results - true_power[:, None]
+    results_diff = np.abs(results - true_power[:, None])
 
     print(seed)
 
@@ -71,6 +80,7 @@ def plot_curve_and_heatmap(
     sample_sizes,
     k_values,
     n_curve,
+    quantile,
     figsize=(12, 5),
 ):
     # Create figure and subplots
@@ -110,7 +120,7 @@ def plot_curve_and_heatmap(
     im = ax_heat.imshow(
         diff_mean,
         cmap="RdBu_r",
-        vmin=-vmax,
+        vmin=0,
         vmax=vmax,
         interpolation="nearest",
         aspect="auto",
@@ -131,7 +141,7 @@ def plot_curve_and_heatmap(
             ax_heat.text(
                 j,
                 i,
-                f"{diff_mean[i, j]:.2f}",
+                f"{diff_mean[i, j]:.4f}",
                 ha="center",
                 va="center",
                 fontsize=8,
@@ -139,6 +149,7 @@ def plot_curve_and_heatmap(
 
     plt.colorbar(im, ax=ax_heat, label="Estimated − True power")
 
+    fig.suptitle(f"Top {quantile:.0%} of variables by |true effect|")
     fig.tight_layout()
 
     return fig, (ax_curve, ax_heat)
@@ -147,6 +158,7 @@ def plot_curve_and_heatmap(
 if __name__ == "__main__":
 
     ESTIMATOR = p_est_subsampling_repetition
+    QUANTILE = 1
 
     # - Recalculate this
     SEED = 20260724
@@ -165,22 +177,13 @@ if __name__ == "__main__":
             rng_np=rng
         )
 
-    N_REPS = 10
+    N_REPS = 100
     SAMPLE_SIZES = [10, 20, 40, 80, 120]
     K_VALUES = (1, 5, 10, 25)
 
     results_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     results_sq_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
     diff_sum = np.zeros((len(SAMPLE_SIZES), len(K_VALUES)))
-    '''
-        TE_model,
-        estimator,
-        n_variables,
-        k_values,
-        sample_sizes,
-        seed=None
-    ):
-    '''
 
     # Main loop - estimate power difference with LLN
     results_list = Parallel(n_jobs=10)(
@@ -190,6 +193,7 @@ if __name__ == "__main__":
             n_variables=N_VARIABLES,
             k_values=K_VALUES,
             sample_sizes=SAMPLE_SIZES,
+            quantile=QUANTILE,
             seed=i,
         )
         for i in range(N_REPS)
@@ -221,6 +225,7 @@ if __name__ == "__main__":
         ci_upper,
         SAMPLE_SIZES,
         K_VALUES,
+        quantile=QUANTILE,
         n_curve=40,
     )
     plt.show()

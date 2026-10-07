@@ -138,8 +138,8 @@ def p_est_subsampling_repetition(
     TE,
     n_variables,
     sample_size,
-    tau_M,
     exp_number,
+    tau_M=0,
     n_rep=100,
     return_full_matrix=False,
     rng_np=None

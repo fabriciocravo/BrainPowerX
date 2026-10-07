@@ -1,10 +1,8 @@
-from effect_model import (
-    draw_true_effects,
-    draw_experiment_array,
+from significance_planning_strats import (
+    first_significant_experiment
 )
-from utils import(
-    edges_to_pvalues_from_experiment,
-    significance_map
+from true_effect_models import(
+    normal_true_effects
 )
 from joblib import( 
     Parallel,
@@ -14,53 +12,28 @@ import numpy as np
 
 
 def run_any_significant_test(
-    seed,
-    p_crit,
-    n_subs,
+    TE_model,
     n_variables,
-    tau_A,
-    tau_S,
-    max_K,
+    n_sample,
+    p_crit,
+    seed=None
 ):
-    rng_np = np.random.default_rng(seed)
+    
+    if seed is not None:
+        rng_np = np.random.default_rng(seed)
+    else:
+        rng_np = np.random.default_rng()
 
-    true_effects = draw_true_effects(
-            n_variables=n_variables,
-            tau_A=tau_A,
-            tau_S=tau_S,
-            rng_np=rng_np
-        )
+    TE = TE_model(n_variables, rng=rng_np)
 
-    K = 0
-
-    while True and K < max_K:
-
-        experiment_effects = draw_experiment_array(
-            TE=true_effects,
-            n_subs=n_subs,
-            tau_mu=0,
-            rng_np=rng_np
-        )
-
-        p_value_array = edges_to_pvalues_from_experiment(
-            E=experiment_effects,
-            N=n_subs
-        )
-
-        sig_array = significance_map(
-            p_value_array,
-            n_variables=n_variables,
-            alpha=p_crit
-        )
-
-        K += 1
-
-        if np.any(sig_array):
-            break
-
-    if K >= max_K:
-        print('Max K reached')
-
+    _, _, K = first_significant_experiment(
+        TE,
+        n_variables=n_variables,
+        sample_size=n_sample,
+        alpha=p_crit,
+        max_sig_iteration=10000
+    )
+       
     return K
 
 
@@ -68,40 +41,48 @@ if __name__ == '__main__':
 
     # VALUES BEING ANALYZED
     P_CRIT = [0.10, 0.05, 0.01, 0.005]
-    N_SUBS = 160
+    N_SUBS_LIST = [10, 20, 40, 80, 120]
+    N_REPS = 10000
 
     # CONSTANT SETTING
     N_NODES = 268
     N_VARIABLES = N_NODES * (N_NODES - 1) // 2
+
+    # Normal Model
     TAU_A = 0.00088
     TAU_S = 1.0
     TAU_MU = 0
-    MAX_K = 100000
-    N_MAJOR_REPS = 100
-    JOB_NUMBER = 5
 
-    results_dict = {}
-    for p_c in P_CRIT:
-
-        seeds = [i for i in range(N_MAJOR_REPS)]
-
-        results = Parallel(
-            n_jobs=JOB_NUMBER,
-            backend="loky",
-        )(delayed(run_any_significant_test)(
-            seed=seed,
-            p_crit=p_c,
-            n_subs=N_SUBS,
-            n_variables=N_VARIABLES,
+    def TE_normal(n_var, rng):
+        return normal_true_effects(
+            n_variables=n_var,
             tau_A=TAU_A,
             tau_S=TAU_S,
-            max_K=MAX_K,
-        ) for seed in seeds)
+            rng_np=rng
+        )
 
-        results = np.array(results)
-        K_mean = results.mean()
-        print(f'For {p_c} the estimated K value is {K_mean}')
-        results_dict[p_c] = K_mean
+    #################
+    JOB_NUMBER = 10
+
+    results_dict = {}
+    for n_sub in N_SUBS_LIST:
+        for p_c in P_CRIT:
+
+            results = Parallel(
+                n_jobs=JOB_NUMBER,
+                backend="loky",
+            )(delayed(run_any_significant_test)(
+                TE_model=TE_normal,
+                n_variables=N_VARIABLES,
+                seed=seed,
+                p_crit=p_c,
+                n_sample=n_sub,
+            ) for seed in range(N_REPS))
+
+            results = np.array(results)
+            K_mean = results.mean()
+            print(f'For {p_c} and {n_sub} the estimated K value is {K_mean}')
+            results_dict[(n_sub, p_c)] = K_mean
 
     print("Final results")
     for key, value in results_dict.items():
