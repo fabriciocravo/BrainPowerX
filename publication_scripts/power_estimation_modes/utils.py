@@ -57,10 +57,13 @@ def calculate_power_fwer(
         N,
         alpha=0.05
 ):
+  
+    # Designed for positive effects only
+    e_mat_abs = np.abs(e_mat)
 
     # Two-sided critical value: alpha/n_variables split across both tails
     t_crit = stats.t.ppf(1 - alpha/(2*n_variables), N-1)
-    nc = np.sqrt(N) * e_mat
+    nc = np.sqrt(N) * e_mat_abs
 
     # Primary tail (Survival function)
     pow_upper = stats.nct.sf(t_crit, N - 1, nc)
@@ -79,16 +82,19 @@ def calculate_t_power_fwer(
         N,
         alpha=0.05
 ):
+    
+    # Design for positive effects only
+    t_mat_abs = np.abs(t_mat)
 
     # Two-sided critical value: alpha/n_variables split across both tails
     t_crit = stats.t.ppf(1 - alpha/(2*n_variables), N-1)
 
     # Primary tail (Survival function)
-    pow_upper = stats.nct.sf(t_crit, N - 1, t_mat)
+    pow_upper = stats.nct.sf(t_crit, N - 1, t_mat_abs)
     pow_upper = np.where(np.isnan(pow_upper), 1.0, pow_upper)
 
     # Opposite tail (CDF) - fill numerical precision NaNs with 0.0
-    pow_lower = stats.nct.cdf(-t_crit, N - 1, t_mat)
+    pow_lower = stats.nct.cdf(-t_crit, N - 1, t_mat_abs)
     pow_lower = np.where(np.isnan(pow_lower), 0.0, pow_lower)
 
     return pow_upper + pow_lower
