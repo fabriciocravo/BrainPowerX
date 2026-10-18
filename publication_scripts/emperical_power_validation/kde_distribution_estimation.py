@@ -79,8 +79,6 @@ for mat in file_mats:
 with open("./distribution_fit_data/kde_fit.pkl", "wb") as f:
     pickle.dump(kde_dict, f)
 
-
-
 # Map filename substrings to short, human-readable labels
 NAME_MAP = {
     "abcd_fc_gt-test1-t2-Ground_Truth.mat": "ABCD FC - Gender",
@@ -109,8 +107,8 @@ for ax, (name, entry) in zip(axes, kde_dict.items()):
 
     # Plot the pdf of the KDE
     x = np.linspace(
-        np.percentile(kde.dataset, 2.5),
-        np.percentile(kde.dataset, 97.5),
+        np.percentile(kde.dataset, 0.001),
+        np.percentile(kde.dataset, 99.999),
         500
     )
     ax.plot(x, kde(x))
